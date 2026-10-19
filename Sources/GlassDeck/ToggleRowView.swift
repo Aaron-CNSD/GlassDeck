@@ -67,14 +67,32 @@ final class ToggleRowView: NSView {
         toggleSwitch.state = toggle.currentState() ? .on : .off
     }
 
+    /// Read the current state (may shell out; call off the main thread).
+    func currentToggleState() -> Bool {
+        toggle.currentState()
+    }
+
+    /// Apply a previously-read state to the UI (call on the main thread).
+    func applyState(_ state: Bool) {
+        toggleSwitch.state = state ? .on : .off
+    }
+
     @objc private func switchChanged(_ sender: NSSwitch) {
         let newState = sender.state == .on
+        // Apply the state synchronously so the switch feels instant.
         toggle.setState(newState)
         onToggle?()
 
-        // Some toggles are asynchronous; re-sync after a short delay.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.refresh()
+        // Some system toggles take effect asynchronously (e.g. Finder, Dock).
+        // Fire the sync on a background queue so it never blocks the UI thread,
+        // then bounce back to the main thread to reflect the authoritative state.
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            // Give the system a moment to settle, then read the real state.
+            Thread.sleep(forTimeInterval: 0.15)
+            let authoritative = self?.toggle.currentState() ?? newState
+            DispatchQueue.main.async {
+                self?.toggleSwitch.state = authoritative ? .on : .off
+            }
         }
     }
 }

@@ -128,6 +128,14 @@ final class DeckViewController: NSViewController {
             view.topAnchor.constraint(equalTo: contentContainer.topAnchor),
             view.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor),
         ])
+        // Fade-in transition for a silkier tab switch.
+        view.alphaValue = 0
+        view.layer?.opacity = 0
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.22
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            view.animator().alphaValue = 1
+        }
     }
 
     // MARK: - Tab: Toggles
@@ -200,6 +208,7 @@ final class DeckViewController: NSViewController {
             row.topAnchor.constraint(equalTo: inner.topAnchor),
             row.bottomAnchor.constraint(equalTo: inner.bottomAnchor),
         ])
+        capsule.addGlassHoverAnimation()
         return capsule
     }
 
@@ -488,7 +497,21 @@ final class DeckViewController: NSViewController {
         stack.addArrangedSubview(record)
         stack.addArrangedSubview(ocr)
 
-        [screenshot, record, ocr].forEach {
+        // Quick system actions
+        let emptyTrash = makeActionButton(title: L.t(.emptyTrash), symbol: "trash") {
+            SystemController.emptyTrash()
+        }
+        let emptyClipboard = makeActionButton(title: L.t(.emptyClipboard), symbol: "doc.on.clipboard") {
+            SystemController.emptyClipboard()
+        }
+        let screenSaver = makeActionButton(title: L.t(.screenSaver), symbol: "sparkles.tv") {
+            SystemController.startScreenSaver()
+        }
+        stack.addArrangedSubview(emptyTrash)
+        stack.addArrangedSubview(emptyClipboard)
+        stack.addArrangedSubview(screenSaver)
+
+        [screenshot, record, ocr, emptyTrash, emptyClipboard, screenSaver].forEach {
             $0.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
         return stack
@@ -543,7 +566,20 @@ final class DeckViewController: NSViewController {
     }
 
     private func refreshToggles() {
-        toggleRows.forEach { $0.refresh() }
+        // Reading system state shells out (osascript / defaults), which can
+        // block for tens of ms each. Do it off the main thread so the panel
+        // opens instantly, then bounce back to apply the authoritative state.
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let states = self.toggleRows.map { row -> Bool in
+                row.currentToggleState()
+            }
+            DispatchQueue.main.async {
+                for (row, state) in zip(self.toggleRows, states) {
+                    row.applyState(state)
+                }
+            }
+        }
     }
 
     deinit {

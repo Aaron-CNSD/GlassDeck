@@ -116,12 +116,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Right-click opens a small menu with a "Open Control Window" item.
+    /// Right-click opens a small menu with "Open Control Window",
+    /// a Language submenu, and Quit.
     private func showMenu(_ sender: AnyObject?) {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: L.t(.openControlWindow),
                                 action: #selector(openControlWindow),
                                 keyEquivalent: ""))
+
+        // Language submenu
+        let languageItem = NSMenuItem(title: L.t(.language), action: nil, keyEquivalent: "")
+        let languageMenu = NSMenu()
+        for lang in L.Lang.allCases {
+            let item = NSMenuItem(title: lang.displayName,
+                                  action: #selector(selectLanguage(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = lang.code
+            item.state = (L.current == lang && L.hasOverride) ? .on : .off
+            languageMenu.addItem(item)
+        }
+        languageMenu.addItem(.separator())
+        let followItem = NSMenuItem(title: L.t(.followSystem),
+                                    action: #selector(followSystemLanguage(_:)),
+                                    keyEquivalent: "")
+        followItem.target = self
+        followItem.state = L.hasOverride ? .off : .on
+        languageMenu.addItem(followItem)
+        languageItem.submenu = languageMenu
+        menu.addItem(languageItem)
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: L.t(.quit),
                                 action: #selector(NSApplication.terminate(_:)),
@@ -129,6 +153,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil // reset so left-click still toggles popover
+    }
+
+    @objc private func selectLanguage(_ sender: NSMenuItem) {
+        guard let code = sender.representedObject as? String,
+              let lang = L.Lang.allCases.first(where: { $0.code == code }) else { return }
+        L.setOverride(lang)
+        reloadUIForLanguageChange()
+    }
+
+    @objc private func followSystemLanguage(_ sender: NSMenuItem) {
+        L.setOverride(nil)
+        reloadUIForLanguageChange()
+    }
+
+    /// Rebuild the control window & popover with the newly selected language.
+    private func reloadUIForLanguageChange() {
+        // Recreate the popover content with fresh localized strings.
+        let content = DeckViewController()
+        content.preferredContentSize = NSSize(width: 380, height: 720)
+        popover.contentViewController = content
+
+        // Recreate the standalone window too.
+        if controlWindow != nil {
+            controlWindow?.close()
+            controlWindow = nil
+        }
+        openControlWindow()
+
+        // Update the menu bar tooltip.
+        statusItem.button?.toolTip = L.t(.appName)
     }
 
     // MARK: - Standalone Control Window

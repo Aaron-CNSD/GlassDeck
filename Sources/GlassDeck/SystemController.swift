@@ -8,18 +8,29 @@ enum SystemController {
 
     // MARK: - Helpers
 
+    /// Run a command without blocking the caller (fire-and-forget).
+    /// Most toggle actions call this so the UI thread never stalls.
     private static func run(_ args: [String]) {
+        runAsync(args)
+    }
+
+    /// Run a command on a background queue, off the UI thread.
+    private static func runAsync(_ args: [String]) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = args
+            try? process.run()
+            process.waitUntilExit()
+        }
+    }
+
+    /// Run a command synchronously and return its stdout. Used only for reads,
+    /// which are fast and must return a value.
+    private static func runSync(_ args: [String]) -> String? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = args
-        try? process.run()
-        process.waitUntilExit()
-    }
-
-    private static func defaultsRead(_ key: String, domain: String) -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/defaults")
-        process.arguments = ["read", domain, key]
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = Pipe()
@@ -27,6 +38,10 @@ enum SystemController {
         process.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func defaultsRead(_ key: String, domain: String) -> String? {
+        return runSync(["/usr/bin/defaults", "read", domain, key])
     }
 
     private static func defaultsWrite(_ key: String, value: String, domain: String) {

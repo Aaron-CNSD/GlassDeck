@@ -86,4 +86,72 @@ final class GlassPanel: NSView {
             backing.layer?.cornerRadius = glassCornerRadius
         }
     }
+
+    // MARK: - Glass Hover / Press Animation
+
+    /// A subtle overlay that brightens on hover and dims on press, giving the
+    /// capsule a tactile, "liquid" feel without breaking the glass aesthetic.
+    private var hoverOverlay: NSView?
+
+    /// Attach a hover-highlight + press-scale animation to this glass capsule.
+    func addGlassHoverAnimation() {
+        wantsLayer = true
+        layer?.masksToBounds = true
+        layer?.cornerRadius = glassCornerRadius
+
+        // Transparent highlight overlay that fades in on hover.
+        let overlay = NSView()
+        overlay.wantsLayer = true
+        overlay.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
+        overlay.layer?.opacity = 0
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(overlay)
+        contentView.addConstraints([
+            overlay.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: contentView.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        ])
+        hoverOverlay = overlay
+
+        // Tracking area for hover enter/exit.
+        let tracking = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(tracking)
+    }
+
+    public override func mouseEntered(with event: NSEvent) {
+        animateOverlay(to: 1.0, scale: 1.0)
+    }
+
+    public override func mouseExited(with event: NSEvent) {
+        animateOverlay(to: 0.0, scale: 1.0)
+    }
+
+    public override func mouseDown(with event: NSEvent) {
+        animateOverlay(to: 0.5, scale: 0.985)
+        super.mouseDown(with: event)
+    }
+
+    public override func mouseUp(with event: NSEvent) {
+        animateOverlay(to: 1.0, scale: 1.0)
+        super.mouseUp(with: event)
+    }
+
+    private func animateOverlay(to opacity: Float, scale: CGFloat) {
+        let target = CGPoint(x: 0.5, y: 0.5)
+        let anchor = CGPoint(x: 0.5, y: 0.5)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.18
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            hoverOverlay?.layer?.opacity = opacity
+            layer?.setAffineTransform(CGAffineTransform(scaleX: scale, y: scale))
+            layer?.anchorPoint = anchor
+            layer?.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        }
+    }
 }

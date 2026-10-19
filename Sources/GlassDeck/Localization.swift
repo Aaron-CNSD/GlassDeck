@@ -10,10 +10,33 @@ enum L {
     // MARK: - Language detection
 
     /// The active language, resolved from the user's preferred localizations.
-    enum Lang {
+    enum Lang: CaseIterable {
         case zhHans, zhHant, en, ja, ko
 
-        static var current: Lang {
+        /// ISO code, e.g. "zh-Hans".
+        var code: String {
+            switch self {
+            case .zhHans: return "zh-Hans"
+            case .zhHant: return "zh-Hant"
+            case .en: return "en"
+            case .ja: return "ja"
+            case .ko: return "ko"
+            }
+        }
+
+        /// Native display name, e.g. "简体中文", "English".
+        var displayName: String {
+            switch self {
+            case .zhHans: return "简体中文"
+            case .zhHant: return "繁體中文"
+            case .en: return "English"
+            case .ja: return "日本語"
+            case .ko: return "한국어"
+            }
+        }
+
+        /// The language the system would pick, ignoring any manual override.
+        static var system: Lang {
             let preferred = Locale.preferredLanguages.first ?? "en"
             let code = preferred.lowercased()
             if code.hasPrefix("zh-hans") || code.hasPrefix("zh_cn") || code == "zh-cn" { return .zhHans }
@@ -24,10 +47,39 @@ enum L {
         }
     }
 
+    /// Notification posted whenever the language changes, so live UI can refresh.
+    static let languageChangedNotification = Notification.Name("GlassDeckLanguageChanged")
+
+    private static let overrideKey = "GlassDeck.languageOverride"
+
+    /// The currently effective language: manual override wins, else follow system.
+    static var current: Lang {
+        if let stored = UserDefaults.standard.string(forKey: overrideKey),
+           let lang = Lang.allCases.first(where: { $0.code == stored }) {
+            return lang
+        }
+        return .system
+    }
+
+    /// Whether the user has manually chosen a language (vs. following the system).
+    static var hasOverride: Bool {
+        UserDefaults.standard.string(forKey: overrideKey) != nil
+    }
+
+    /// Set a manual override, or pass `nil` to fall back to the system language.
+    static func setOverride(_ lang: Lang?) {
+        if let lang = lang {
+            UserDefaults.standard.set(lang.code, forKey: overrideKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: overrideKey)
+        }
+        NotificationCenter.default.post(name: languageChangedNotification, object: nil)
+    }
+
     // MARK: - Lookup
 
     static func t(_ key: Key) -> String {
-        let table = table(for: Lang.current)
+        let table = table(for: current)
         return table[key] ?? en[key] ?? key.rawValue
     }
 
@@ -63,13 +115,14 @@ enum L {
         case cleanerTitle, scan, cleanAll, scanHint, cleaning, freed, nothingToClean
 
         // Tools
-        case toolsTitle, screenshot, screenRecord, ocr, ocrCopied, ocrNoImage
+        case toolsTitle, screenshot, screenRecord, ocr, ocrCopied, ocrNoImage,
+             emptyTrash, emptyClipboard, screenSaver
 
         // Launch
         case launchTitle, addItem, emptyLaunch
 
         // Menu / general
-        case openControlWindow, quit, settings
+        case openControlWindow, quit, settings, language, followSystem
 
         // Widget
         case widgetSwitchTitle, widgetEmpty
@@ -124,6 +177,9 @@ private let en: [L.Key: String] = [
     .ocr: "OCR Clipboard",
     .ocrCopied: "OCR text copied to clipboard",
     .ocrNoImage: "No image in clipboard",
+    .emptyTrash: "Empty Trash",
+    .emptyClipboard: "Empty Clipboard",
+    .screenSaver: "Start Screen Saver",
 
     .launchTitle: "Quick Launch",
     .addItem: "Add Item",
@@ -132,6 +188,8 @@ private let en: [L.Key: String] = [
     .openControlWindow: "Open Control Window",
     .quit: "Quit Glass Deck",
     .settings: "Settings",
+    .language: "Language",
+    .followSystem: "Follow System",
 
     .widgetSwitchTitle: "Quick Switches",
     .widgetEmpty: "Open Glass Deck to configure",
@@ -185,6 +243,9 @@ private let zhHans: [L.Key: String] = [
     .ocr: "剪贴板 OCR",
     .ocrCopied: "OCR 文字已复制到剪贴板",
     .ocrNoImage: "剪贴板中没有图片",
+    .emptyTrash: "清空废纸篓",
+    .emptyClipboard: "清空剪贴板",
+    .screenSaver: "启动屏保",
 
     .launchTitle: "快捷启动",
     .addItem: "添加项目",
@@ -193,6 +254,8 @@ private let zhHans: [L.Key: String] = [
     .openControlWindow: "打开控制窗口",
     .quit: "退出玻璃面板",
     .settings: "设置",
+    .language: "语言",
+    .followSystem: "跟随系统",
 
     .widgetSwitchTitle: "快捷开关",
     .widgetEmpty: "打开玻璃面板进行配置",
@@ -246,6 +309,9 @@ private let zhHant: [L.Key: String] = [
     .ocr: "剪貼簿 OCR",
     .ocrCopied: "OCR 文字已複製到剪貼簿",
     .ocrNoImage: "剪貼簿中沒有圖片",
+    .emptyTrash: "清空垃圾桶",
+    .emptyClipboard: "清空剪貼簿",
+    .screenSaver: "啟動螢幕保護",
 
     .launchTitle: "快速啟動",
     .addItem: "新增項目",
@@ -254,6 +320,8 @@ private let zhHant: [L.Key: String] = [
     .openControlWindow: "開啟控制視窗",
     .quit: "結束玻璃面板",
     .settings: "設定",
+    .language: "語言",
+    .followSystem: "跟隨系統",
 
     .widgetSwitchTitle: "快捷開關",
     .widgetEmpty: "開啟玻璃面板進行設定",
@@ -307,6 +375,9 @@ private let ja: [L.Key: String] = [
     .ocr: "クリップボード OCR",
     .ocrCopied: "OCR テキストをクリップボードにコピーしました",
     .ocrNoImage: "クリップボードに画像がありません",
+    .emptyTrash: "ゴミ箱を空にする",
+    .emptyClipboard: "クリップボードを空にする",
+    .screenSaver: "スクリーンセーバー起動",
 
     .launchTitle: "クイック起動",
     .addItem: "項目を追加",
@@ -315,6 +386,8 @@ private let ja: [L.Key: String] = [
     .openControlWindow: "コントロールウィンドウを開く",
     .quit: "グラスデッキを終了",
     .settings: "設定",
+    .language: "言語",
+    .followSystem: "システムに従う",
 
     .widgetSwitchTitle: "クイックスイッチ",
     .widgetEmpty: "グラスデッキを開いて設定",
@@ -368,6 +441,9 @@ private let ko: [L.Key: String] = [
     .ocr: "클립보드 OCR",
     .ocrCopied: "OCR 텍스트가 클립보드에 복사되었습니다",
     .ocrNoImage: "클립보드에 이미지가 없습니다",
+    .emptyTrash: "휴지통 비우기",
+    .emptyClipboard: "클립보드 비우기",
+    .screenSaver: "화면 보호기 시작",
 
     .launchTitle: "빠른 실행",
     .addItem: "항목 추가",
@@ -376,6 +452,8 @@ private let ko: [L.Key: String] = [
     .openControlWindow: "컨트롤 윈도우 열기",
     .quit: "글래스 덱 종료",
     .settings: "설정",
+    .language: "언어",
+    .followSystem: "시스템 따르기",
 
     .widgetSwitchTitle: "빠른 스위치",
     .widgetEmpty: "글래스 덱을 열어 설정",
