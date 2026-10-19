@@ -1,0 +1,255 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DEAD000000000000000000A1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B1 /* main.swift */; };
+		DEAD000000000000000000A2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B2 /* AppDelegate.swift */; };
+		DEAD000000000000000000A3 /* GlassPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B3 /* GlassPanel.swift */; };
+		DEAD000000000000000000A4 /* Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B4 /* Toggle.swift */; };
+		DEAD000000000000000000A5 /* SystemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B5 /* SystemController.swift */; };
+		DEAD000000000000000000A6 /* ToggleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B6 /* ToggleRowView.swift */; };
+		DEAD000000000000000000A7 /* DeckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEAD000000000000000000B7 /* DeckViewController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		DEAD000000000000000000B1 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B3 /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B4 /* Toggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toggle.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B5 /* SystemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemController.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B6 /* ToggleRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleRowView.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000B7 /* DeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckViewController.swift; sourceTree = "<group>"; };
+		DEAD000000000000000000C1 /* GlassDeck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DEAD000000000000000000D1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DEAD000000000000000000E0 = {
+			isa = PBXGroup;
+			children = (
+				DEAD000000000000000000E1 /* GlassDeck */,
+				DEAD000000000000000000E2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DEAD000000000000000000E1 /* GlassDeck */ = {
+			isa = PBXGroup;
+			children = (
+				DEAD000000000000000000B1 /* main.swift */,
+				DEAD000000000000000000B2 /* AppDelegate.swift */,
+				DEAD000000000000000000B3 /* GlassPanel.swift */,
+				DEAD000000000000000000B4 /* Toggle.swift */,
+				DEAD000000000000000000B5 /* SystemController.swift */,
+				DEAD000000000000000000B6 /* ToggleRowView.swift */,
+				DEAD000000000000000000B7 /* DeckViewController.swift */,
+			);
+			path = Sources/GlassDeck;
+			sourceTree = "<group>";
+		};
+		DEAD000000000000000000E2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DEAD000000000000000000C1 /* GlassDeck.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DEAD000000000000000000F0 /* GlassDeck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DEAD000000000000000000F1 /* Build configuration list for PBXNativeTarget "GlassDeck" */;
+			buildPhases = (
+				DEAD000000000000000000D2 /* Sources */,
+				DEAD000000000000000000D1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GlassDeck;
+			productName = GlassDeck;
+			productReference = DEAD000000000000000000C1 /* GlassDeck.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DEAD000000000000000000F3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = DEAD000000000000000000F4 /* Build configuration list for PBXProject "GlassDeck" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DEAD000000000000000000E0;
+			productRefGroup = DEAD000000000000000000E2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DEAD000000000000000000F0 /* GlassDeck */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DEAD000000000000000000D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEAD000000000000000000A1 /* main.swift in Sources */,
+				DEAD000000000000000000A2 /* AppDelegate.swift in Sources */,
+				DEAD000000000000000000A3 /* GlassPanel.swift in Sources */,
+				DEAD000000000000000000A4 /* Toggle.swift in Sources */,
+				DEAD000000000000000000A5 /* SystemController.swift in Sources */,
+				DEAD000000000000000000A6 /* ToggleRowView.swift in Sources */,
+				DEAD000000000000000000A7 /* DeckViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DEAD000000000000000000A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		DEAD000000000000000000A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		DEAD000000000000000000AA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "MIT License";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassdeck.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		DEAD000000000000000000AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "MIT License";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.glassdeck.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DEAD000000000000000000F1 /* Build configuration list for PBXNativeTarget "GlassDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEAD000000000000000000AA /* Debug */,
+				DEAD000000000000000000AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DEAD000000000000000000F4 /* Build configuration list for PBXProject "GlassDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DEAD000000000000000000A8 /* Debug */,
+				DEAD000000000000000000A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DEAD000000000000000000F3 /* Project object */;
+}

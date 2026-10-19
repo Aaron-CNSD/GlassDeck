@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Swift / Xcode
+.build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcuserstate
+build/
+
+# Swift Package Manager
+.swiftpm/
+Package.resolved
+
+# Build artifacts / distributions (not versioned; release via GitHub Releases)
+*.dmg
+*.zip
+*.app
+
+# Editor / IDE
+.vscode/
+.idea/
