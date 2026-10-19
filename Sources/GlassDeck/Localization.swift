@@ -122,7 +122,8 @@ enum L {
         case launchTitle, addItem, emptyLaunch
 
         // Menu / general
-        case openControlWindow, quit, settings, language, followSystem
+        case openControlWindow, quit, settings, language, followSystem,
+             languageChangedTitle, languageChangedBody, relaunchNow, relaunchLater
 
         // Widget
         case widgetSwitchTitle, widgetEmpty
@@ -190,6 +191,10 @@ private let en: [L.Key: String] = [
     .settings: "Settings",
     .language: "Language",
     .followSystem: "Follow System",
+    .languageChangedTitle: "Language Changed",
+    .languageChangedBody: "The language will take effect after Glass Deck relaunches.",
+    .relaunchNow: "Relaunch Now",
+    .relaunchLater: "Later",
 
     .widgetSwitchTitle: "Quick Switches",
     .widgetEmpty: "Open Glass Deck to configure",
@@ -256,6 +261,10 @@ private let zhHans: [L.Key: String] = [
     .settings: "设置",
     .language: "语言",
     .followSystem: "跟随系统",
+    .languageChangedTitle: "语言已切换",
+    .languageChangedBody: "语言将在玻璃面板重新启动后生效。",
+    .relaunchNow: "立即重启",
+    .relaunchLater: "稍后",
 
     .widgetSwitchTitle: "快捷开关",
     .widgetEmpty: "打开玻璃面板进行配置",
@@ -322,6 +331,10 @@ private let zhHant: [L.Key: String] = [
     .settings: "設定",
     .language: "語言",
     .followSystem: "跟隨系統",
+    .languageChangedTitle: "語言已切換",
+    .languageChangedBody: "語言將在玻璃面板重新啟動後生效。",
+    .relaunchNow: "立即重新啟動",
+    .relaunchLater: "稍後",
 
     .widgetSwitchTitle: "快捷開關",
     .widgetEmpty: "開啟玻璃面板進行設定",
@@ -388,6 +401,10 @@ private let ja: [L.Key: String] = [
     .settings: "設定",
     .language: "言語",
     .followSystem: "システムに従う",
+    .languageChangedTitle: "言語を変更しました",
+    .languageChangedBody: "言語はグラスデッキの再起動後に反映されます。",
+    .relaunchNow: "今すぐ再起動",
+    .relaunchLater: "後で",
 
     .widgetSwitchTitle: "クイックスイッチ",
     .widgetEmpty: "グラスデッキを開いて設定",
@@ -454,6 +471,10 @@ private let ko: [L.Key: String] = [
     .settings: "설정",
     .language: "언어",
     .followSystem: "시스템 따르기",
+    .languageChangedTitle: "언어가 변경되었습니다",
+    .languageChangedBody: "언어는 글래스 덱 재시작 후 적용됩니다.",
+    .relaunchNow: "지금 재시작",
+    .relaunchLater: "나중에",
 
     .widgetSwitchTitle: "빠른 스위치",
     .widgetEmpty: "글래스 덱을 열어 설정",

@@ -167,22 +167,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reloadUIForLanguageChange()
     }
 
-    /// Rebuild the control window & popover with the newly selected language.
+    /// Reflect the newly selected language. Rebuilding the popover/window while
+    /// they are on screen is unsafe (AppKit throws when swapping
+    /// `contentViewController` on a live popover), so we defer to a relaunch —
+    /// the standard, crash-free way to apply a language change.
     private func reloadUIForLanguageChange() {
-        // Recreate the popover content with fresh localized strings.
-        let content = DeckViewController()
-        content.preferredContentSize = NSSize(width: 380, height: 720)
-        popover.contentViewController = content
-
-        // Recreate the standalone window too.
-        if controlWindow != nil {
-            controlWindow?.close()
-            controlWindow = nil
+        // Close the popover so no live view controller is being swapped.
+        if popover.isShown {
+            popover.performClose(nil)
         }
-        openControlWindow()
+        // Close the standalone window if present.
+        controlWindow?.close()
+        controlWindow = nil
 
-        // Update the menu bar tooltip.
+        // Update the menu bar tooltip immediately.
         statusItem.button?.toolTip = L.t(.appName)
+
+        // Prompt the user; the language will fully apply on next launch.
+        let alert = NSAlert()
+        alert.messageText = L.t(.languageChangedTitle)
+        alert.informativeText = L.t(.languageChangedBody)
+        alert.addButton(withTitle: L.t(.relaunchNow))
+        alert.addButton(withTitle: L.t(.relaunchLater))
+        if alert.runModal() == .alertFirstButtonReturn {
+            // Relaunch the app cleanly with the new language.
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            task.arguments = ["-n", Bundle.main.bundlePath]
+            task.launch()
+            NSApp.terminate(nil)
+        }
     }
 
     // MARK: - Standalone Control Window

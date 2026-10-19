@@ -99,8 +99,9 @@ final class GlassPanel: NSView {
         layer?.masksToBounds = true
         layer?.cornerRadius = glassCornerRadius
 
-        // Transparent highlight overlay that fades in on hover.
-        let overlay = NSView()
+        // Transparent highlight overlay that fades in on hover. It sits above
+        // the content but must NOT intercept clicks — so it ignores hit testing.
+        let overlay = PassThroughView()
         overlay.wantsLayer = true
         overlay.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
         overlay.layer?.opacity = 0
@@ -125,33 +126,26 @@ final class GlassPanel: NSView {
     }
 
     public override func mouseEntered(with event: NSEvent) {
-        animateOverlay(to: 1.0, scale: 1.0)
+        animateOverlay(to: 1.0)
     }
 
     public override func mouseExited(with event: NSEvent) {
-        animateOverlay(to: 0.0, scale: 1.0)
+        animateOverlay(to: 0.0)
     }
 
-    public override func mouseDown(with event: NSEvent) {
-        animateOverlay(to: 0.5, scale: 0.985)
-        super.mouseDown(with: event)
-    }
-
-    public override func mouseUp(with event: NSEvent) {
-        animateOverlay(to: 1.0, scale: 1.0)
-        super.mouseUp(with: event)
-    }
-
-    private func animateOverlay(to opacity: Float, scale: CGFloat) {
-        let target = CGPoint(x: 0.5, y: 0.5)
-        let anchor = CGPoint(x: 0.5, y: 0.5)
+    private func animateOverlay(to opacity: Float) {
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.18
             ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
             hoverOverlay?.layer?.opacity = opacity
-            layer?.setAffineTransform(CGAffineTransform(scaleX: scale, y: scale))
-            layer?.anchorPoint = anchor
-            layer?.position = CGPoint(x: bounds.midX, y: bounds.midY)
         }
+    }
+}
+
+/// A view that ignores mouse events entirely, letting clicks pass through to
+/// whatever sits beneath it. Used for hover overlays.
+final class PassThroughView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
     }
 }
