@@ -5,7 +5,8 @@
 Glass Deck puts your most-used controls into a single, beautiful **Liquid Glass** panel — the same refractive, self-lit glass aesthetic Apple introduced in macOS 26 (Tahoe). Click the menu bar icon (a glass prism), flip a switch, done. It also ships a **desktop widget** so you can flip switches straight from the desktop.
 
 <p align="center">
-  <em>(Screenshots coming soon — see below on how to run it)</em>
+  <a href="https://aarongame.com">🌐 Website</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Aaron-CNSD/GlassDeck/releases">⬇️ Download</a>
 </p>
 
 ---
