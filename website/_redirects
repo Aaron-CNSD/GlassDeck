@@ -1,0 +1,8 @@
+# Cloudflare Pages redirects
+# 旧游戏站的历史页面已全部下线，这里把它们 301 到首页，
+# 让 Google 把旧链接的权重传过来，而不是留一堆 404。
+#
+# 说明：Pages 会优先返回真实存在的静态文件（index.html / sitemap.xml /
+# robots.txt / app-icon.png），所以下面的通配规则只会命中不存在的旧路径。
+
+/*  /  301
