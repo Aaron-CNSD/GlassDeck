@@ -144,6 +144,18 @@ if #available(macOS 26.0, *) {
 
 The key rule (straight from Apple's guidance): **put content into `contentView`, never `addSubview` directly onto the glass** — that's the only place guaranteed to sit inside the glass layer.
 
+## 🌐 Website
+
+The landing page lives in `website/` and is served from **[aarongame.com](https://aarongame.com)** by a Cloudflare Worker (`aarongame`) with static assets.
+
+```bash
+npx wrangler deploy --config deploy/wrangler.jsonc
+```
+
+`deploy/worker.js` serves the static files and 301s any retired URL to the homepage, so old inbound links keep their value instead of dying as 404s.
+
+> Note: don't add a `_redirects` file here — on Workers static assets its rules are evaluated *before* asset matching, which redirects the whole site into a loop.
+
 ## 🤝 Contributing
 
 Pull requests welcome. Toggles are dead-simple to add — just append a `Toggle` entry in `DeckViewController.swift`:

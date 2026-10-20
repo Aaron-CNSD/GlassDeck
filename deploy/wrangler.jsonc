@@ -1,0 +1,11 @@
+{
+  // 部署配置：把 website/ 目录作为静态资源发布到 Worker "aarongame"
+  // 用法：npx wrangler deploy --config deploy/wrangler.jsonc
+  "name": "aarongame",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-19",
+  "assets": {
+    "directory": "../website",
+    "binding": "ASSETS"
+  }
+}
