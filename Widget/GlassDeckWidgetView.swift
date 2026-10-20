@@ -1,5 +1,7 @@
 import WidgetKit
 import SwiftUI
+import Shared
+import AppIntents
 
 /// The widget's switch panel: a grid of tappable system toggles that adapt
 /// to the three widget sizes (small / medium / large).
@@ -49,18 +51,14 @@ struct SwitchPanelView: View {
     }
 }
 
-/// A single tappable switch cell with a live on/off state.
+/// A single tappable switch cell. State is read fresh on every render
+/// (widgets are snapshots), and tapping fires the toggle intent.
 struct SwitchCell: View {
-    @State private var isOn: Bool
     let sw: WidgetSwitch
-
-    init(sw: WidgetSwitch) {
-        self.sw = sw
-        _isOn = State(initialValue: sw.isOn)
-    }
 
     var body: some View {
         Button(intent: ToggleSwitchIntent(id: sw.id)) {
+            let isOn = sw.isOn
             VStack(spacing: 6) {
                 Image(systemName: sw.symbol)
                     .font(.system(size: 18, weight: .medium))
@@ -93,13 +91,14 @@ struct SwitchCell: View {
     }
 }
 
-// MARK: - App Intent (tapping a cell toggles the switch)
-
-import AppIntents
+// MARK: - App Intent (tapping a cell opens Glass Deck to apply the toggle)
 
 struct ToggleSwitchIntent: AppIntent {
     static var title: LocalizedStringResource = "Toggle Switch"
     static var description = IntentDescription("Flip a system switch.")
+    /// Widget extensions run sandboxed and cannot spawn `defaults` processes,
+    /// so hand control to the main app, which applies the change.
+    static var openAppWhenRun: Bool = true
 
     @Parameter(title: "Switch ID")
     var id: String
@@ -108,9 +107,8 @@ struct ToggleSwitchIntent: AppIntent {
     init(id: String) { self.id = id }
 
     func perform() async throws -> some IntentResult {
-        if let sw = WidgetSwitches.all.first(where: { $0.id == id }) {
-            sw.set(!sw.isOn)
-        }
+        // Record the requested switch so the app can apply it on activation.
+        UserDefaults.standard.set(id, forKey: "GlassDeck.pendingWidgetToggle")
         return .result()
     }
 }

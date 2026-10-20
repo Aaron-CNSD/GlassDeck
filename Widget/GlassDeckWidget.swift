@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import Shared
 
 // MARK: - Timeline Provider
 

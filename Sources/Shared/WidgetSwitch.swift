@@ -3,20 +3,29 @@ import Foundation
 /// A system switch that both the main app and the widget can toggle.
 /// The widget runs in a separate process, so it flips these via `defaults`
 /// commands — the exact same keys the main app reads, so state stays in sync.
-struct WidgetSwitch: Identifiable {
-    let id: String
-    let symbol: String
+public struct WidgetSwitch: Identifiable {
+    public let id: String
+    public let symbol: String
     /// The `defaults` domain this switch lives in.
-    let domain: String
+    public let domain: String
     /// The `defaults` key.
-    let key: String
+    public let key: String
     /// The value written when the switch is "on".
-    let onValue: String
+    public let onValue: String
     /// The value written when the switch is "off".
-    let offValue: String
+    public let offValue: String
+
+    public init(id: String, symbol: String, domain: String, key: String, onValue: String, offValue: String) {
+        self.id = id
+        self.symbol = symbol
+        self.domain = domain
+        self.key = key
+        self.onValue = onValue
+        self.offValue = offValue
+    }
 
     /// Read the current on/off state by querying `defaults`.
-    var isOn: Bool {
+    public var isOn: Bool {
         let task = Process()
         task.launchPath = "/usr/bin/defaults"
         task.arguments = ["read", domain, key]
@@ -38,7 +47,7 @@ struct WidgetSwitch: Identifiable {
     }
 
     /// Flip the switch by writing the target value via `defaults`.
-    func set(_ on: Bool) {
+    public func set(_ on: Bool) {
         let task = Process()
         task.launchPath = "/usr/bin/defaults"
         task.arguments = ["write", domain, key, on ? onValue : offValue]
@@ -59,8 +68,8 @@ struct WidgetSwitch: Identifiable {
 }
 
 /// The curated set of switches exposed in the widget.
-enum WidgetSwitches {
-    static let all: [WidgetSwitch] = [
+public enum WidgetSwitches {
+    public static let all: [WidgetSwitch] = [
         WidgetSwitch(id: "darkmode", symbol: "moon.fill",
                      domain: "Apple Global Domain", key: "AppleInterfaceStyle",
                      onValue: "Dark", offValue: "Light"),
@@ -81,7 +90,7 @@ enum WidgetSwitches {
                      onValue: "true", offValue: "false"),
     ]
 
-    static func primary(_ count: Int = 6) -> [WidgetSwitch] {
+    public static func primary(_ count: Int = 6) -> [WidgetSwitch] {
         Array(all.prefix(count))
     }
 }
