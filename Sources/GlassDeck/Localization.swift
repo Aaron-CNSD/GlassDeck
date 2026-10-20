@@ -103,7 +103,7 @@ enum L {
 
         // Toggles
         case darkMode, hiddenFiles, pathBar, desktopIcons, keepAwake, mute,
-             autoHideDock, hideMenuBar, naturalScrolling
+             autoHideDock, hideMenuBar, naturalScrolling, showStatusBar, showAllExtensions
 
         // Monitor
         case cpu, memory, network, upload, download
@@ -116,7 +116,11 @@ enum L {
 
         // Tools
         case toolsTitle, screenshot, screenRecord, ocr, ocrCopied, ocrNoImage,
-             emptyTrash, emptyClipboard, screenSaver
+             emptyTrash, emptyClipboard, screenSaver,
+             dnsCache, restartFinder, copyIP, lockScreen, sleepDisplay, copied
+
+        // Compact panel
+        case compactMode, fullMode, openFullDeck
 
         // Launch
         case launchTitle, addItem, emptyLaunch
@@ -181,6 +185,19 @@ private let en: [L.Key: String] = [
     .emptyTrash: "Empty Trash",
     .emptyClipboard: "Empty Clipboard",
     .screenSaver: "Start Screen Saver",
+    .dnsCache: "Flush DNS Cache",
+    .restartFinder: "Restart Finder",
+    .copyIP: "Copy Local IP",
+    .lockScreen: "Lock Screen",
+    .sleepDisplay: "Sleep Display",
+    .copied: "Copied",
+
+    .compactMode: "Compact Panel",
+    .fullMode: "Full Panel",
+    .openFullDeck: "Open Full Deck",
+
+    .showStatusBar: "Finder Status Bar",
+    .showAllExtensions: "Show File Extensions",
 
     .launchTitle: "Quick Launch",
     .addItem: "Add Item",
@@ -251,6 +268,19 @@ private let zhHans: [L.Key: String] = [
     .emptyTrash: "清空废纸篓",
     .emptyClipboard: "清空剪贴板",
     .screenSaver: "启动屏保",
+    .dnsCache: "清除 DNS 缓存",
+    .restartFinder: "重启访达",
+    .copyIP: "复制本机 IP",
+    .lockScreen: "锁定屏幕",
+    .sleepDisplay: "显示器休眠",
+    .copied: "已复制",
+
+    .compactMode: "简版面板",
+    .fullMode: "完整面板",
+    .openFullDeck: "打开完整面板",
+
+    .showStatusBar: "访达状态栏",
+    .showAllExtensions: "显示文件扩展名",
 
     .launchTitle: "快捷启动",
     .addItem: "添加项目",
@@ -321,6 +351,19 @@ private let zhHant: [L.Key: String] = [
     .emptyTrash: "清空垃圾桶",
     .emptyClipboard: "清空剪貼簿",
     .screenSaver: "啟動螢幕保護",
+    .dnsCache: "清除 DNS 快取",
+    .restartFinder: "重新啟動 Finder",
+    .copyIP: "複製本機 IP",
+    .lockScreen: "鎖定螢幕",
+    .sleepDisplay: "顯示器休眠",
+    .copied: "已複製",
+
+    .compactMode: "簡版面板",
+    .fullMode: "完整面板",
+    .openFullDeck: "開啟完整面板",
+
+    .showStatusBar: "Finder 狀態列",
+    .showAllExtensions: "顯示檔案延伸檔名",
 
     .launchTitle: "快速啟動",
     .addItem: "新增項目",
@@ -391,6 +434,19 @@ private let ja: [L.Key: String] = [
     .emptyTrash: "ゴミ箱を空にする",
     .emptyClipboard: "クリップボードを空にする",
     .screenSaver: "スクリーンセーバー起動",
+    .dnsCache: "DNS キャッシュを消去",
+    .restartFinder: "Finder を再起動",
+    .copyIP: "ローカル IP をコピー",
+    .lockScreen: "画面をロック",
+    .sleepDisplay: "ディスプレイをスリープ",
+    .copied: "コピーしました",
+
+    .compactMode: "コンパクトパネル",
+    .fullMode: "フルパネル",
+    .openFullDeck: "フルパネルを開く",
+
+    .showStatusBar: "Finder ステータスバー",
+    .showAllExtensions: "拡張子を表示",
 
     .launchTitle: "クイック起動",
     .addItem: "項目を追加",
@@ -461,6 +517,19 @@ private let ko: [L.Key: String] = [
     .emptyTrash: "휴지통 비우기",
     .emptyClipboard: "클립보드 비우기",
     .screenSaver: "화면 보호기 시작",
+    .dnsCache: "DNS 캐시 지우기",
+    .restartFinder: "Finder 재시작",
+    .copyIP: "로컬 IP 복사",
+    .lockScreen: "화면 잠금",
+    .sleepDisplay: "디스플레이 잠자기",
+    .copied: "복사됨",
+
+    .compactMode: "간단 패널",
+    .fullMode: "전체 패널",
+    .openFullDeck: "전체 패널 열기",
+
+    .showStatusBar: "Finder 상태 막대",
+    .showAllExtensions: "파일 확장자 표시",
 
     .launchTitle: "빠른 실행",
     .addItem: "항목 추가",

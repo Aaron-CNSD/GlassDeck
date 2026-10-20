@@ -8,6 +8,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let popover = NSPopover()
     private var controlWindow: NSWindow?
 
+    static let compactModeKey = "GlassDeck.compactMode"
+    static let compactModeChanged = Notification.Name("GlassDeckCompactModeChanged")
+
+    private var compactMode: Bool {
+        UserDefaults.standard.bool(forKey: Self.compactModeKey)
+    }
+
     // MARK: - Application Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -90,14 +97,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Popover (Menu Bar Panel)
 
     private func setupPopover() {
-        let content = DeckViewController()
-        popover.contentViewController = content
         popover.behavior = .transient
         popover.animates = true
+        applyPopoverContent()
 
-        // On macOS 26+, the popover already picks up the Liquid Glass look.
-        // Set a sensible content size for the deck.
-        content.preferredContentSize = NSSize(width: 380, height: 720)
+        NotificationCenter.default.addObserver(forName: Self.compactModeChanged,
+                                               object: nil,
+                                               queue: .main) { [weak self] _ in
+            self?.rebuildPopover()
+        }
+    }
+
+    /// Swap the popover's content for the current mode. Only ever called while
+    /// the popover is closed — replacing `contentViewController` on a live
+    /// popover throws, which is exactly what crashed v1.3.0.
+    private func applyPopoverContent() {
+        let vc: NSViewController
+        if compactMode {
+            let mini = MiniDeckViewController()
+            mini.preferredContentSize = NSSize(width: 300, height: 250)
+            vc = mini
+        } else {
+            let deck = DeckViewController()
+            deck.preferredContentSize = NSSize(width: 380, height: 720)
+            vc = deck
+        }
+        popover.contentViewController = vc
+        // Force the view to load now: the popover then opens without a hitch,
+        // and any Auto Layout mistake surfaces at launch instead of mid-click.
+        _ = vc.view
+    }
+
+    private func rebuildPopover() {
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+        applyPopoverContent()
+        guard let button = statusItem.button else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {
@@ -123,6 +161,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: L.t(.openControlWindow),
                                 action: #selector(openControlWindow),
                                 keyEquivalent: ""))
+
+        // Compact / full panel switch
+        let compactItem = NSMenuItem(title: compactMode ? L.t(.fullMode) : L.t(.compactMode),
+                                     action: #selector(toggleCompactMode),
+                                     keyEquivalent: "")
+        compactItem.target = self
+        menu.addItem(compactItem)
+
+        menu.addItem(.separator())
 
         // Language submenu
         let languageItem = NSMenuItem(title: L.t(.language), action: nil, keyEquivalent: "")
@@ -155,8 +202,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = nil // reset so left-click still toggles popover
     }
 
-    @objc private func selectLanguage(_ sender: NSMenuItem) {
-        guard let code = sender.representedObject as? String,
+    @objc private func toggleCompactMode() {
+        UserDefaults.standard.set(!compactMode, forKey: Self.compactModeKey)
+        NotificationCenter.default.post(name: Self.compactModeChanged, object: nil)
+    }
+
+    @objc private func selectLanguage(_ sender: NSMenuItem) {        guard let code = sender.representedObject as? String,
               let lang = L.Lang.allCases.first(where: { $0.code == code }) else { return }
         L.setOverride(lang)
         reloadUIForLanguageChange()

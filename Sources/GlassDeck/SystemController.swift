@@ -196,6 +196,58 @@ enum SystemController {
         defaultsWrite("com.apple.swipescrolldirection", value: on ? "true" : "false", domain: "NSGlobalDomain")
         run(["/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings", "-u"])
     }
+
+    // MARK: - Finder Status Bar
+
+    static var showStatusBar: Bool {
+        let v = defaultsRead("ShowStatusBar", domain: "com.apple.finder")
+        return v == "true" || v == "1"
+    }
+
+    static func setShowStatusBar(_ on: Bool) {
+        defaultsWrite("ShowStatusBar", value: on ? "true" : "false", domain: "com.apple.finder")
+        run(["/usr/bin/killall", "Finder"])
+    }
+
+    // MARK: - File Extensions
+
+    static var showAllExtensions: Bool {
+        let v = defaultsRead("AppleShowAllExtensions", domain: "NSGlobalDomain")
+        return v == "true" || v == "1"
+    }
+
+    static func setShowAllExtensions(_ on: Bool) {
+        defaultsWrite("AppleShowAllExtensions", value: on ? "true" : "false", domain: "NSGlobalDomain")
+        run(["/usr/bin/killall", "Finder"])
+    }
+
+    // MARK: - Maintenance
+
+    /// Flush the DNS resolver cache and restart mDNSResponder.
+    static func flushDNSCache() {
+        run(["/usr/bin/dscacheutil", "-flushcache"])
+        run(["/usr/bin/killall", "-HUP", "mDNSResponder"])
+    }
+
+    static func restartFinder() {
+        run(["/usr/bin/killall", "Finder"])
+    }
+
+    /// Best-effort local IPv4 address (Wi-Fi first, then Ethernet).
+    static func localIP() -> String? {
+        for iface in ["en0", "en1", "en2"] {
+            if let ip = runSync(["/usr/sbin/ipconfig", "getifaddr", iface]), !ip.isEmpty {
+                return ip
+            }
+        }
+        return nil
+    }
+
+    /// Put the display to sleep, which locks the Mac when "require password"
+    /// is enabled. CGSession is gone on recent macOS, so pmset is the way.
+    static func lockScreen() {
+        run(["/usr/bin/pmset", "displaysleepnow"])
+    }
 }
 
 /// Manages the long-running `caffeinate` process for the Keep Awake toggle.

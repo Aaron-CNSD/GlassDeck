@@ -12,6 +12,7 @@
 		20B552E7F47DA2967328DEB7 /* Shared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2AFC58335D1E8624FE1233A2 /* WidgetSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8238F1828BD47F9D479244 /* WidgetSwitch.swift */; };
 		41C7E3D514BA02A376516B4A /* SystemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98031268E60D243CD3CDC35D /* SystemController.swift */; };
+		431E874212BDC01FD640F872 /* ToggleLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0176EAAA405533628BBF769 /* ToggleLibrary.swift */; };
 		47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9BE0DE7459648809A298FD /* SystemMonitor.swift */; };
 		4AF36FC1C125196935B14D83 /* GlassDeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4082B004A45FD219D40CFA53 /* GlassDeckWidget.swift */; };
 		62DE7C3C869A8DA0DCAB3AD5 /* GlassDeckWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */; };
@@ -28,6 +29,7 @@
 		CFCB1A571E7AF046FB252397 /* DisplayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B3898D0DAA160262E329E6 /* DisplayController.swift */; };
 		D0D7098A2EB38BDDEF3CC0FA /* Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8D0A7B57916D3E1024663D /* Toggle.swift */; };
 		E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863037DB92A329D08C322982 /* QuickLaunch.swift */; };
+		FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,6 +103,8 @@
 		BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDeckWidgetView.swift; sourceTree = "<group>"; };
 		BF7013321C2A1C75539503BD /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		C8532222238B11B5097EB1A7 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniDeckViewController.swift; sourceTree = "<group>"; };
+		E0176EAAA405533628BBF769 /* ToggleLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleLibrary.swift; sourceTree = "<group>"; };
 		E4E3212F4C5D10AD284A785B /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
 		FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -147,10 +151,12 @@
 				5F04D6AED68DD93507A9982B /* Info.plist */,
 				BF7013321C2A1C75539503BD /* Localization.swift */,
 				43A86B0487E31C40506B5B4D /* main.swift */,
+				DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */,
 				863037DB92A329D08C322982 /* QuickLaunch.swift */,
 				98031268E60D243CD3CDC35D /* SystemController.swift */,
 				9F9BE0DE7459648809A298FD /* SystemMonitor.swift */,
 				3C8D0A7B57916D3E1024663D /* Toggle.swift */,
+				E0176EAAA405533628BBF769 /* ToggleLibrary.swift */,
 				356EF9376BC5C1488D301127 /* ToggleRowView.swift */,
 				C8532222238B11B5097EB1A7 /* WindowController.swift */,
 			);
@@ -218,6 +224,7 @@
 				6E074897C7D37EB99DCBCA5E /* Frameworks */,
 				392D1EEACE4B5ADF3A15690B /* Embed Foundation Extensions */,
 				3EDE939B84578CE7D44B4BA1 /* Embed Frameworks */,
+				E5A83BA3D27380950D8A963C /* Copy App Icon */,
 			);
 			buildRules = (
 			);
@@ -281,6 +288,27 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		E5A83BA3D27380950D8A963C /* Copy App Icon */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy App Icon";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ICON=\"$SRCROOT/Resources/AppIcon.icns\"\nDEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns\"\nif [ -f \"$ICON\" ]; then\n  mkdir -p \"$(dirname \"$DEST\")\"\n  cp \"$ICON\" \"$DEST\"\nelse\n  echo \"warning: AppIcon.icns not found at $ICON\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		1F5498DE618C453A6899466D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -310,10 +338,12 @@
 				CFCB1A571E7AF046FB252397 /* DisplayController.swift in Sources */,
 				732B617DBA5E1AD1E836E557 /* GlassPanel.swift in Sources */,
 				B3351587EB468E5632B4C257 /* Localization.swift in Sources */,
+				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,
 				E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */,
 				41C7E3D514BA02A376516B4A /* SystemController.swift in Sources */,
 				47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */,
 				D0D7098A2EB38BDDEF3CC0FA /* Toggle.swift in Sources */,
+				431E874212BDC01FD640F872 /* ToggleLibrary.swift in Sources */,
 				6D88A10E8ECE2494A67B5CF0 /* ToggleRowView.swift in Sources */,
 				A1929895353FD651BDEF145A /* WindowController.swift in Sources */,
 				6D49127A43E7458F7CAB3C33 /* main.swift in Sources */,
@@ -375,7 +405,8 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/GlassDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GlassDeck;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -423,7 +454,8 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/GlassDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GlassDeck;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -564,7 +596,7 @@
 				CODE_SIGN_ENTITLEMENTS = Widget/GlassDeckWidget.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "GlassDeck Widget";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -588,7 +620,7 @@
 				CODE_SIGN_ENTITLEMENTS = Widget/GlassDeckWidget.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Widget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "GlassDeck Widget";
 				LD_RUNPATH_SEARCH_PATHS = (

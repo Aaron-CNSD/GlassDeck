@@ -49,6 +49,7 @@ final class DeckViewController: NSViewController {
         ])
 
         buildContent(in: panel.contentView)
+        panel.startAmbientSheen()
     }
 
     private func buildContent(in container: NSView) {
@@ -143,35 +144,7 @@ final class DeckViewController: NSViewController {
     private var toggleRows: [ToggleRowView] = []
 
     private func buildTogglesView() -> NSView {
-        let toggles: [Toggle] = [
-            Toggle(id: "darkmode", title: L.t(.darkMode), symbol: "moon.fill",
-                   isOn: { SystemController.isDarkMode },
-                   setState: { SystemController.setDarkMode($0) }),
-            Toggle(id: "hiddenfiles", title: L.t(.hiddenFiles), symbol: "eye.slash.fill",
-                   isOn: { SystemController.showHiddenFiles },
-                   setState: { SystemController.setShowHiddenFiles($0) }),
-            Toggle(id: "pathbar", title: L.t(.pathBar), symbol: "point.topleft.down.curvedto.point.bottomright.up",
-                   isOn: { SystemController.showPathBar },
-                   setState: { SystemController.setShowPathBar($0) }),
-            Toggle(id: "desktopicons", title: L.t(.desktopIcons), symbol: "desktopcomputer",
-                   isOn: { SystemController.hideDesktopIcons },
-                   setState: { SystemController.setHideDesktopIcons($0) }),
-            Toggle(id: "keepawake", title: L.t(.keepAwake), symbol: "moon.zzz.fill",
-                   isOn: { SystemController.isKeepAwake },
-                   setState: { SystemController.setKeepAwake($0) }),
-            Toggle(id: "mute", title: L.t(.mute), symbol: "speaker.slash.fill",
-                   isOn: { SystemController.isMuted },
-                   setState: { SystemController.setMuted($0) }),
-            Toggle(id: "autohidedock", title: L.t(.autoHideDock), symbol: "dock.rectangle",
-                   isOn: { SystemController.autoHideDock },
-                   setState: { SystemController.setAutoHideDock($0) }),
-            Toggle(id: "menubar", title: L.t(.hideMenuBar), symbol: "rectangle.topthird.inset.filled",
-                   isOn: { SystemController.hideMenuBar },
-                   setState: { SystemController.setHideMenuBar($0) }),
-            Toggle(id: "scroll", title: L.t(.naturalScrolling), symbol: "arrow.up.arrow.down",
-                   isOn: { SystemController.naturalScrolling },
-                   setState: { SystemController.setNaturalScrolling($0) }),
-        ]
+        let toggles = ToggleLibrary.all
 
         let list = NSStackView()
         list.orientation = .vertical
@@ -507,14 +480,35 @@ final class DeckViewController: NSViewController {
         let screenSaver = makeActionButton(title: L.t(.screenSaver), symbol: "sparkles.tv") {
             SystemController.startScreenSaver()
         }
-        stack.addArrangedSubview(emptyTrash)
-        stack.addArrangedSubview(emptyClipboard)
-        stack.addArrangedSubview(screenSaver)
-
-        [screenshot, record, ocr, emptyTrash, emptyClipboard, screenSaver].forEach {
-            $0.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        let dns = makeActionButton(title: L.t(.dnsCache), symbol: "network.slash") {
+            SystemController.flushDNSCache()
         }
-        return stack
+        let finder = makeActionButton(title: L.t(.restartFinder), symbol: "arrow.clockwise") {
+            SystemController.restartFinder()
+        }
+        let copyIP = makeActionButton(title: L.t(.copyIP), symbol: "number") { [weak self] in
+            if let ip = SystemController.localIP() {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(ip, forType: .string)
+                self?.showToast("\(L.t(.copied)): \(ip)")
+            }
+        }
+        let lock = makeActionButton(title: L.t(.lockScreen), symbol: "lock.display") {
+            SystemController.lockScreen()
+        }
+
+        let buttons = [screenshot, record, ocr,
+                       emptyTrash, emptyClipboard, screenSaver,
+                       dns, finder, copyIP, lock]
+        buttons.forEach { stack.addArrangedSubview($0) }
+
+        let scroll = NSScrollView()
+        scroll.documentView = stack
+        scroll.hasVerticalScroller = true
+        scroll.drawsBackground = false
+        stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor).isActive = true
+
+        return scroll
     }
 
     private func showToast(_ message: String) {

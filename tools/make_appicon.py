@@ -179,8 +179,8 @@ def build():
     canvas.alpha_composite(
         Image.composite(glow.filter(ImageFilter.GaussianBlur(78)), Image.new("RGBA", (S, S), (0, 0, 0, 0)), front))
 
-    canvas.alpha_composite(pill(cx, cy - 112, 470, 128, True))
-    canvas.alpha_composite(pill(cx, cy + 74, 470, 128, False))
+    canvas.alpha_composite(pill(cx, cy - 104, 352, 124, True))
+    canvas.alpha_composite(pill(cx, cy + 74, 352, 124, False))
 
     yy, xx = np.mgrid[0:S, 0:S]
     dist = np.sqrt((xx - S / 2) ** 2 + (yy - S / 2) ** 2) / (BODY * 0.78)

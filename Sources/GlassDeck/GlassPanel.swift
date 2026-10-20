@@ -92,6 +92,44 @@ final class GlassPanel: NSView {
     /// A subtle overlay that brightens on hover and dims on press, giving the
     /// capsule a tactile, "liquid" feel without breaking the glass aesthetic.
     private var hoverOverlay: NSView?
+    private var hoverSheen: CAGradientLayer?
+
+    /// A slow, looping light sweep across the panel. Subtle enough to read as
+    /// the glass catching ambient light, not as a loading animation. Call this
+    /// on the one big surface (the deck itself), not on every capsule.
+    func startAmbientSheen() {
+        wantsLayer = true
+        layer?.masksToBounds = true
+        layer?.cornerRadius = glassCornerRadius
+        let sweep = CAGradientLayer()
+        sweep.colors = [
+            NSColor.clear.cgColor,
+            NSColor.white.withAlphaComponent(0.055).cgColor,
+            NSColor.clear.cgColor,
+        ]
+        sweep.startPoint = CGPoint(x: 0, y: 0)
+        sweep.endPoint = CGPoint(x: 1, y: 1)
+        sweep.locations = [-0.7, -0.4, -0.1]
+        sweep.frame = bounds
+        layer?.addSublayer(sweep)
+
+        let anim = CABasicAnimation(keyPath: "locations")
+        anim.fromValue = [-0.7, -0.4, -0.1]
+        anim.toValue = [1.1, 1.4, 1.7]
+        anim.duration = 9
+        anim.repeatCount = .infinity
+        anim.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        sweep.add(anim, forKey: "ambientSheen")
+        ambientSheen = sweep
+    }
+
+    private var ambientSheen: CAGradientLayer?
+
+    override func layout() {
+        super.layout()
+        ambientSheen?.frame = bounds
+        hoverSheen?.frame = hoverOverlay?.bounds ?? .zero
+    }
 
     /// Attach a hover-highlight + press-scale animation to this glass capsule.
     func addGlassHoverAnimation() {
@@ -103,7 +141,17 @@ final class GlassPanel: NSView {
         // the content but must NOT intercept clicks — so it ignores hit testing.
         let overlay = PassThroughView()
         overlay.wantsLayer = true
-        overlay.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
+        let sheen = CAGradientLayer()
+        sheen.colors = [
+            NSColor.white.withAlphaComponent(0.16).cgColor,
+            NSColor.white.withAlphaComponent(0.04).cgColor,
+            NSColor.clear.cgColor,
+        ]
+        sheen.locations = [0, 0.55, 1]
+        sheen.startPoint = CGPoint(x: 0, y: 1)
+        sheen.endPoint = CGPoint(x: 1, y: 0)
+        overlay.layer?.addSublayer(sheen)
+        self.hoverSheen = sheen
         overlay.layer?.opacity = 0
         overlay.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(overlay)
@@ -114,6 +162,13 @@ final class GlassPanel: NSView {
             overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         ])
         hoverOverlay = overlay
+
+        // The gradient layer needs an explicit frame; keep it in sync.
+        DispatchQueue.main.async { [weak overlay] in
+            guard let overlay = overlay else { return }
+            overlay.layoutSubtreeIfNeeded()
+            sheen.frame = overlay.bounds
+        }
 
         // Tracking area for hover enter/exit.
         let tracking = NSTrackingArea(
