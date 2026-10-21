@@ -15,10 +15,12 @@
 		431E874212BDC01FD640F872 /* ToggleLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0176EAAA405533628BBF769 /* ToggleLibrary.swift */; };
 		47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9BE0DE7459648809A298FD /* SystemMonitor.swift */; };
 		4AF36FC1C125196935B14D83 /* GlassDeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4082B004A45FD219D40CFA53 /* GlassDeckWidget.swift */; };
+		56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */; };
 		62DE7C3C869A8DA0DCAB3AD5 /* GlassDeckWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */; };
 		6D49127A43E7458F7CAB3C33 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A86B0487E31C40506B5B4D /* main.swift */; };
 		6D88A10E8ECE2494A67B5CF0 /* ToggleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356EF9376BC5C1488D301127 /* ToggleRowView.swift */; };
 		732B617DBA5E1AD1E836E557 /* GlassPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E3212F4C5D10AD284A785B /* GlassPanel.swift */; };
+		7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */; };
 		8D09CCD0A83557FD970B430F /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; };
 		A1929895353FD651BDEF145A /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8532222238B11B5097EB1A7 /* WindowController.swift */; };
 		A8EA2FF8186C4F9885BCA4D5 /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; };
@@ -94,6 +96,7 @@
 		43A86B0487E31C40506B5B4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5F04D6AED68DD93507A9982B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		63F1CF7DB03B75A1225D4BEF /* GlassDeckWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassDeckWidget.entitlements; sourceTree = "<group>"; };
+		6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		7E6EA7F5686EC718B878BF95 /* Shared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Shared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		863037DB92A329D08C322982 /* QuickLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLaunch.swift; sourceTree = "<group>"; };
 		96B3898D0DAA160262E329E6 /* DisplayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayController.swift; sourceTree = "<group>"; };
@@ -101,6 +104,7 @@
 		9F9BE0DE7459648809A298FD /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
 		AAB94AC23EEF66527489CE13 /* GlassDeckWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GlassDeckWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDeckWidgetView.swift; sourceTree = "<group>"; };
+		BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCenter.swift; sourceTree = "<group>"; };
 		BF7013321C2A1C75539503BD /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		C8532222238B11B5097EB1A7 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniDeckViewController.swift; sourceTree = "<group>"; };
@@ -145,6 +149,7 @@
 				133135A76E2D7EC9B7F234FD /* AppDelegate.swift */,
 				FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */,
 				03216F568B076BB99A03D70A /* DevTools.swift */,
+				6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */,
 				0FD4830DD0E557965E8C7380 /* DiskCleaner.swift */,
 				96B3898D0DAA160262E329E6 /* DisplayController.swift */,
 				E4E3212F4C5D10AD284A785B /* GlassPanel.swift */,
@@ -152,6 +157,7 @@
 				BF7013321C2A1C75539503BD /* Localization.swift */,
 				43A86B0487E31C40506B5B4D /* main.swift */,
 				DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */,
+				BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */,
 				863037DB92A329D08C322982 /* QuickLaunch.swift */,
 				98031268E60D243CD3CDC35D /* SystemController.swift */,
 				9F9BE0DE7459648809A298FD /* SystemMonitor.swift */,
@@ -334,11 +340,13 @@
 				C945B2E4B1E559EE0D50D0A9 /* AppDelegate.swift in Sources */,
 				15335ECDB5D2B86B505CCB08 /* DeckViewController.swift in Sources */,
 				C7953F723D1D9B7CB3D61A6A /* DevTools.swift in Sources */,
+				7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */,
 				1EBEE50B5E8ABB6D888DA16E /* DiskCleaner.swift in Sources */,
 				CFCB1A571E7AF046FB252397 /* DisplayController.swift in Sources */,
 				732B617DBA5E1AD1E836E557 /* GlassPanel.swift in Sources */,
 				B3351587EB468E5632B4C257 /* Localization.swift in Sources */,
 				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,
+				56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */,
 				E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */,
 				41C7E3D514BA02A376516B4A /* SystemController.swift in Sources */,
 				47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */,

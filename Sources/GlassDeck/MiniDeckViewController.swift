@@ -7,6 +7,8 @@ final class MiniDeckViewController: NSViewController {
 
     private var handlers: [SwitchHandler] = []
     private var rows: [(NSSwitch, Toggle)] = []
+    private var statusLabel: NSTextField!
+    private var statusTimer: Timer?
 
     override func loadView() {
         let panel = GlassPanel()
@@ -59,6 +61,13 @@ final class MiniDeckViewController: NSViewController {
             row.widthAnchor.constraint(equalTo: list.widthAnchor).isActive = true
         }
 
+        statusLabel = NSTextField(labelWithString: "")
+        statusLabel.font = NSFont.systemFont(ofSize: 10, weight: .regular)
+        statusLabel.textColor = .secondaryLabelColor
+        statusLabel.lineBreakMode = .byTruncatingTail
+        statusLabel.maximumNumberOfLines = 2
+        statusLabel.isHidden = true
+
         let footer = NSButton(title: L.t(.openFullDeck), target: nil, action: nil)
         footer.bezelStyle = .inline
         footer.isBordered = false
@@ -69,10 +78,10 @@ final class MiniDeckViewController: NSViewController {
         footer.action = #selector(ActionHandler.run)
         objc_setAssociatedObject(footer, "handler", footerHandler, .OBJC_ASSOCIATION_RETAIN)
 
-        let rootStack = NSStackView(views: [header, list, footer])
+        let rootStack = NSStackView(views: [header, list, statusLabel, footer])
         rootStack.orientation = .vertical
         rootStack.alignment = .leading
-        rootStack.spacing = 12
+        rootStack.spacing = 10
         rootStack.translatesAutoresizingMaskIntoConstraints = false
         inner.addSubview(rootStack)
 
@@ -83,6 +92,7 @@ final class MiniDeckViewController: NSViewController {
             rootStack.bottomAnchor.constraint(equalTo: inner.bottomAnchor, constant: -12),
             header.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
             list.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
+            statusLabel.widthAnchor.constraint(equalTo: rootStack.widthAnchor),
         ])
 
         panel.startAmbientSheen()
@@ -104,8 +114,14 @@ final class MiniDeckViewController: NSViewController {
 
         let toggleSwitch = NSSwitch()
         toggleSwitch.controlSize = .small
-        toggleSwitch.state = toggle.currentState() ? .on : .off
-        let handler = SwitchHandler(toggle)
+        // Never read system state here: that shells out to `defaults` /
+        // `osascript` and would freeze the panel before it even drew.
+        toggleSwitch.state = .off
+
+        let handler = SwitchHandler(toggle, control: toggleSwitch)
+        handler.onFailure = { [weak self] title in
+            self?.showStatus("\(title)：\(L.t(.failed))")
+        }
         toggleSwitch.target = handler
         toggleSwitch.action = #selector(SwitchHandler.changed(_:))
         handlers.append(handler)
@@ -131,6 +147,15 @@ final class MiniDeckViewController: NSViewController {
         }
     }
 
+    private func showStatus(_ text: String) {
+        statusLabel.stringValue = text
+        statusLabel.isHidden = false
+        statusTimer?.invalidate()
+        statusTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: false) { [weak self] _ in
+            self?.statusLabel.isHidden = true
+        }
+    }
+
     override func viewDidAppear() {
         super.viewDidAppear()
         refresh()
@@ -142,12 +167,48 @@ final class MiniDeckViewController: NSViewController {
     }
 }
 
-/// Bridges an NSSwitch action back to a `Toggle`.
+/// Bridges an NSSwitch action back to a `Toggle`, and — crucially — verifies
+/// the change actually landed instead of trusting the switch position.
 final class SwitchHandler: NSObject {
     private let toggle: Toggle
-    init(_ toggle: Toggle) { self.toggle = toggle }
+    private let control: NSSwitch
+
+    /// Called when the switch could not reach the requested state.
+    var onFailure: ((String) -> Void)?
+
+    private var generation = 0
+
+    init(_ toggle: Toggle, control: NSSwitch) {
+        self.toggle = toggle
+        self.control = control
+    }
 
     @objc func changed(_ sender: NSSwitch) {
-        toggle.setState(sender.state == .on)
+        let desired = sender.state == .on
+        generation += 1
+        let current = generation
+
+        control.alphaValue = 0.55
+        toggle.setState(desired)
+        reconcile(desired: desired, generation: current, attempt: 0)
+    }
+
+    private func reconcile(desired: Bool, generation: Int, attempt: Int) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self = self else { return }
+            let actual = self.toggle.currentState()
+            DispatchQueue.main.async {
+                guard self.generation == generation else { return }
+                if actual == desired || attempt >= 7 {
+                    self.control.alphaValue = 1
+                    self.control.state = actual ? .on : .off
+                    if actual != desired {
+                        self.onFailure?(self.toggle.title)
+                    }
+                } else {
+                    self.reconcile(desired: desired, generation: generation, attempt: attempt + 1)
+                }
+            }
+        }
     }
 }

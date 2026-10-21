@@ -9,7 +9,15 @@ final class ToggleRowView: NSView {
     private let titleLabel = NSTextField(labelWithString: "")
     private let toggleSwitch = NSSwitch()
 
+    /// Called after the switch changed, for anything the row cannot do itself.
     var onToggle: (() -> Void)?
+
+    /// Called when the system refused to reach the requested state.
+    var onFailure: ((String) -> Void)?
+
+    /// The last state the user asked for. Only touched on the main thread.
+    private var intent: Bool?
+    private var reconcileGeneration = 0
 
     init(toggle: Toggle) {
         self.toggle = toggle
@@ -34,6 +42,8 @@ final class ToggleRowView: NSView {
         toggleSwitch.target = self
         toggleSwitch.action = #selector(switchChanged(_:))
         toggleSwitch.controlSize = .small
+        // Start neutral; the real state arrives asynchronously via `applyState`.
+        toggleSwitch.state = .off
 
         let stack = NSStackView(views: [iconView, titleLabel, toggleSwitch])
         stack.orientation = .horizontal
@@ -54,17 +64,10 @@ final class ToggleRowView: NSView {
             iconView.widthAnchor.constraint(equalToConstant: 22),
             iconView.heightAnchor.constraint(equalToConstant: 22),
         ])
-
-        refresh()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    /// Pull the latest state from the system and reflect it in the UI.
-    func refresh() {
-        toggleSwitch.state = toggle.currentState() ? .on : .off
     }
 
     /// Read the current state (may shell out; call off the main thread).
@@ -74,24 +77,50 @@ final class ToggleRowView: NSView {
 
     /// Apply a previously-read state to the UI (call on the main thread).
     func applyState(_ state: Bool) {
+        // Don't stomp on a change the user just made.
+        guard intent == nil else { return }
         toggleSwitch.state = state ? .on : .off
     }
 
     @objc private func switchChanged(_ sender: NSSwitch) {
-        let newState = sender.state == .on
-        // Apply the state synchronously so the switch feels instant.
-        toggle.setState(newState)
+        let desired = sender.state == .on
+        intent = desired
+        reconcileGeneration += 1
+        let generation = reconcileGeneration
+
+        // The switch already shows the new position — that is the optimistic
+        // part. Dim it slightly so it reads as "working on it".
+        toggleSwitch.alphaValue = 0.55
+
+        toggle.setState(desired)
         onToggle?()
 
-        // Some system toggles take effect asynchronously (e.g. Finder, Dock).
-        // Fire the sync on a background queue so it never blocks the UI thread,
-        // then bounce back to the main thread to reflect the authoritative state.
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            // Give the system a moment to settle, then read the real state.
-            Thread.sleep(forTimeInterval: 0.15)
-            let authoritative = self?.toggle.currentState() ?? newState
+        reconcile(desired: desired, generation: generation, attempt: 0)
+    }
+
+    /// Some changes only land after Finder/Dock/System Events finishes
+    /// restarting, which can take a couple of seconds. Earlier versions read the
+    /// state back after a fixed 0.15s and immediately reverted the switch when
+    /// it had not landed yet — which made most toggles look broken. Now we poll
+    /// for up to ~2.5s and only fall back to the real state at the very end.
+    private func reconcile(desired: Bool, generation: Int, attempt: Int) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self = self else { return }
+            let actual = self.toggle.currentState()
             DispatchQueue.main.async {
-                self?.toggleSwitch.state = authoritative ? .on : .off
+                // The user flipped it again — this round is stale.
+                guard self.reconcileGeneration == generation else { return }
+
+                if actual == desired || attempt >= 7 {
+                    self.intent = nil
+                    self.toggleSwitch.alphaValue = 1
+                    self.toggleSwitch.state = actual ? .on : .off
+                    if actual != desired {
+                        self.onFailure?(self.toggle.title)
+                    }
+                } else {
+                    self.reconcile(desired: desired, generation: generation, attempt: attempt + 1)
+                }
             }
         }
     }

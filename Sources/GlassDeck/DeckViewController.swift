@@ -34,6 +34,7 @@ final class DeckViewController: NSViewController {
     private var contentContainer: NSView!
     private var contentViews: [Tab: NSView] = [:]
     private var monitorTimer: Timer?
+    private var statusBanner: StatusBanner!
 
     override func loadView() {
         let panel = GlassPanel()
@@ -83,6 +84,11 @@ final class DeckViewController: NSViewController {
         contentContainer = NSView()
         contentContainer.translatesAutoresizingMaskIntoConstraints = false
 
+        // Status line: every action reports here instead of popping an alert,
+        // so a failed switch is visible without blocking the panel.
+        statusBanner = StatusBanner()
+        statusBanner.isHidden = true
+
         // Pre-build all tab views
         contentViews[.toggles] = buildTogglesView()
         contentViews[.monitor] = buildMonitorView()
@@ -92,10 +98,10 @@ final class DeckViewController: NSViewController {
         contentViews[.launch] = buildLaunchView()
 
         // Assemble
-        let root = NSStackView(views: [header, segmented, contentContainer])
+        let root = NSStackView(views: [header, segmented, contentContainer, statusBanner])
         root.orientation = .vertical
         root.alignment = .leading
-        root.spacing = 14
+        root.spacing = 12
         root.translatesAutoresizingMaskIntoConstraints = false
 
         container.addSubview(root)
@@ -103,13 +109,46 @@ final class DeckViewController: NSViewController {
             root.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
             root.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
             root.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
-            root.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -16),
+            root.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -16),
             segmented.widthAnchor.constraint(equalTo: root.widthAnchor),
             contentContainer.widthAnchor.constraint(equalTo: root.widthAnchor),
-            contentContainer.heightAnchor.constraint(equalToConstant: 380),
+            contentContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 300),
+            statusBanner.widthAnchor.constraint(equalTo: root.widthAnchor),
         ])
 
         showTab(.toggles)
+
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(handleCommandFailed(_:)),
+                                              name: SystemController.commandFailed,
+                                              object: nil)
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(handleCommandSucceeded(_:)),
+                                              name: SystemController.commandSucceeded,
+                                              object: nil)
+    }
+
+    // MARK: - Status reporting
+
+    @objc private func handleCommandSucceeded(_ note: Notification) {
+        guard let label = note.userInfo?["label"] as? String else { return }
+        showStatus("\(L.t(.done)): \(label)", isError: false)
+    }
+
+    @objc private func handleCommandFailed(_ note: Notification) {
+        guard let info = note.userInfo,
+              let label = info["label"] as? String else { return }
+        let message = info["message"] as? String ?? L.t(.failed)
+        let needsPermission = info["permission"] as? Bool ?? false
+        showStatus("\(label) — \(message)", isError: true,
+                   actionTitle: needsPermission ? L.t(.openSettings) : nil,
+                   action: needsPermission ? { PermissionCenter.openAutomationSettings() } : nil)
+    }
+
+    private func showStatus(_ text: String, isError: Bool,
+                            actionTitle: String? = nil,
+                            action: (() -> Void)? = nil) {
+        statusBanner.show(text, isError: isError, actionTitle: actionTitle, action: action)
     }
 
     @objc private func tabChanged(_ sender: NSSegmentedControl) {
@@ -154,18 +193,46 @@ final class DeckViewController: NSViewController {
 
         for toggle in toggles {
             let row = ToggleRowView(toggle: toggle)
+            row.onFailure = { [weak self] title in
+                self?.showStatus("\(title) — \(L.t(.failed))", isError: true,
+                                 actionTitle: L.t(.permissionCheck),
+                                 action: { self?.showDiagnostics() })
+            }
             toggleRows.append(row)
             let capsule = wrapInCapsule(row)
             list.addArrangedSubview(capsule)
             capsule.widthAnchor.constraint(equalTo: list.widthAnchor).isActive = true
         }
 
+        return makeScrollableList(list)
+    }
+
+    /// Puts a vertical stack inside a scroll view so it starts at the TOP.
+    ///
+    /// `NSStackView` is not flipped, so using it directly as `documentView`
+    /// makes the scroll view start at the bottom — the first rows end up
+    /// hidden above the visible area. A flipped container fixes the origin.
+    private func makeScrollableList(_ stack: NSStackView) -> NSScrollView {
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let doc = FlippedView()
+        doc.translatesAutoresizingMaskIntoConstraints = false
+        doc.addSubview(stack)
+
         let scroll = NSScrollView()
-        scroll.documentView = list
         scroll.hasVerticalScroller = true
         scroll.drawsBackground = false
-        list.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor).isActive = true
+        scroll.documentView = doc
 
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: doc.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: doc.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: doc.trailingAnchor),
+            stack.bottomAnchor.constraint(equalTo: doc.bottomAnchor),
+            doc.leadingAnchor.constraint(equalTo: scroll.contentView.leadingAnchor),
+            doc.topAnchor.constraint(equalTo: scroll.contentView.topAnchor),
+            doc.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor),
+        ])
         return scroll
     }
 
@@ -419,17 +486,26 @@ final class DeckViewController: NSViewController {
     }
 
     private func scanCache() {
-        let results = DiskCleaner.scan()
-        let text = results
-            .filter { $0.bytes > 0 }
-            .map { "\($0.name): \(ByteFormatter.string($0.bytes))" }
-            .joined(separator: "\n")
-        updateCleanResult(text.isEmpty ? L.t(.nothingToClean) : text)
+        showStatus(L.t(.scan), isError: false)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let results = DiskCleaner.scan()
+            let text = results
+                .filter { $0.bytes > 0 }
+                .map { "\($0.name): \(ByteFormatter.string($0.bytes))" }
+                .joined(separator: "\n")
+            DispatchQueue.main.async {
+                self?.updateCleanResult(text.isEmpty ? L.t(.nothingToClean) : text)
+            }
+        }
     }
 
     private func cleanAll() {
-        let freed = DiskCleaner.cleanAll()
-        updateCleanResult("\(L.t(.freed)) \(ByteFormatter.string(freed))")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let freed = DiskCleaner.cleanAll()
+            DispatchQueue.main.async {
+                self?.updateCleanResult("\(L.t(.freed)) \(ByteFormatter.string(freed))")
+            }
+        }
     }
 
     private func updateCleanResult(_ text: String) {
@@ -440,18 +516,42 @@ final class DeckViewController: NSViewController {
 
     // MARK: - Tab: Tools
 
+    private var toolsContainer: NSView!
+    private var toolsScroll: NSScrollView!
+    private var diagnosticsScroll: NSView?
+    private var diagRows: NSStackView?
+
     private func buildToolsView() -> NSView {
+        toolsContainer = NSView()
+        toolsContainer.translatesAutoresizingMaskIntoConstraints = false
+
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.spacing = 8
         stack.alignment = .leading
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        let screenshot = makeActionButton(title: L.t(.screenshot), symbol: "camera") {
-            DevTools.captureScreenshot()
+        // Self-check goes first: it is the answer to "why did nothing happen?".
+        let check = makeActionButton(title: L.t(.permissionCheck), symbol: "stethoscope") { [weak self] in
+            self?.showDiagnostics()
         }
-        let record = makeActionButton(title: L.t(.screenRecord), symbol: "record.circle") {
-            DevTools.recordScreen()
+        stack.addArrangedSubview(check)
+
+        let screenshot = makeActionButton(title: L.t(.screenshot), symbol: "camera") { [weak self] in
+            DevTools.captureScreenshot { error in
+                guard let error = error else { return }
+                self?.showStatus(error, isError: true,
+                                 actionTitle: L.t(.openSettings),
+                                 action: { PermissionCenter.openScreenRecordingSettings() })
+            }
+        }
+        let record = makeActionButton(title: L.t(.screenRecord), symbol: "record.circle") { [weak self] in
+            DevTools.recordScreen { error in
+                guard let error = error else { return }
+                self?.showStatus(error, isError: true,
+                                 actionTitle: L.t(.openSettings),
+                                 action: { PermissionCenter.openScreenRecordingSettings() })
+            }
         }
         let ocr = makeActionButton(title: L.t(.ocr), symbol: "text.viewfinder") { [weak self] in
             DevTools.ocrClipboard { text in
@@ -459,9 +559,9 @@ final class DeckViewController: NSViewController {
                     if let text = text {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(text, forType: .string)
-                        self?.showToast(L.t(.ocrCopied))
+                        self?.showStatus(L.t(.ocrCopied), isError: false)
                     } else {
-                        self?.showToast(L.t(.ocrNoImage))
+                        self?.showStatus(L.t(.ocrNoImage), isError: true)
                     }
                 }
             }
@@ -490,7 +590,9 @@ final class DeckViewController: NSViewController {
             if let ip = SystemController.localIP() {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(ip, forType: .string)
-                self?.showToast("\(L.t(.copied)): \(ip)")
+                self?.showStatus("\(L.t(.copied)): \(ip)", isError: false)
+            } else {
+                self?.showStatus("\(L.t(.copyIP)) — \(L.t(.failed))", isError: true)
             }
         }
         let lock = makeActionButton(title: L.t(.lockScreen), symbol: "lock.display") {
@@ -502,20 +604,203 @@ final class DeckViewController: NSViewController {
                        dns, finder, copyIP, lock]
         buttons.forEach { stack.addArrangedSubview($0) }
 
-        let scroll = NSScrollView()
-        scroll.documentView = stack
-        scroll.hasVerticalScroller = true
-        scroll.drawsBackground = false
-        stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor).isActive = true
+        let scroll = makeScrollableList(stack)
+        toolsScroll = scroll
 
-        return scroll
+        toolsContainer.addSubview(scroll)
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            scroll.leadingAnchor.constraint(equalTo: toolsContainer.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: toolsContainer.trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: toolsContainer.topAnchor),
+            scroll.bottomAnchor.constraint(equalTo: toolsContainer.bottomAnchor),
+        ])
+
+        return toolsContainer
     }
 
-    private func showToast(_ message: String) {
-        let alert = NSAlert()
-        alert.messageText = message
-        alert.alertStyle = .informational
-        alert.runModal()
+    // MARK: - Diagnostics
+
+    private func showDiagnostics() {
+        if currentTab != .tools {
+            segmented.selectedSegment = Tab.tools.rawValue
+            showTab(.tools)
+        }
+        let view = buildDiagnosticsView()
+        diagnosticsScroll?.removeFromSuperview()
+        diagnosticsScroll = view
+        toolsScroll?.isHidden = true
+        toolsContainer.addSubview(view)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            view.leadingAnchor.constraint(equalTo: toolsContainer.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: toolsContainer.trailingAnchor),
+            view.topAnchor.constraint(equalTo: toolsContainer.topAnchor),
+            view.bottomAnchor.constraint(equalTo: toolsContainer.bottomAnchor),
+        ])
+        refreshDiagnostics()
+    }
+
+    private func hideDiagnostics() {
+        diagnosticsScroll?.removeFromSuperview()
+        diagnosticsScroll = nil
+        diagRows = nil
+        toolsScroll?.isHidden = false
+    }
+
+    private func buildDiagnosticsView() -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.spacing = 8
+        stack.alignment = .leading
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        let headerRow = NSStackView()
+        headerRow.orientation = .horizontal
+        headerRow.alignment = .centerY
+        headerRow.spacing = 8
+
+        let back = NSButton(title: L.t(.back), target: nil, action: nil)
+        back.bezelStyle = .inline
+        back.isBordered = false
+        back.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        let backHandler = ActionHandler { [weak self] in self?.hideDiagnostics() }
+        back.target = backHandler
+        back.action = #selector(ActionHandler.run)
+        objc_setAssociatedObject(back, "h", backHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        let recheck = NSButton(title: L.t(.recheck), target: nil, action: nil)
+        recheck.bezelStyle = .inline
+        recheck.isBordered = false
+        recheck.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        let recheckHandler = ActionHandler { [weak self] in self?.refreshDiagnostics() }
+        recheck.target = recheckHandler
+        recheck.action = #selector(ActionHandler.run)
+        objc_setAssociatedObject(recheck, "h", recheckHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        headerRow.addArrangedSubview(back)
+        headerRow.addArrangedSubview(spacer)
+        headerRow.addArrangedSubview(recheck)
+        stack.addArrangedSubview(headerRow)
+        headerRow.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+
+        let hint = NSTextField(labelWithString: L.t(.permissionCheckHint))
+        hint.font = NSFont.systemFont(ofSize: 11, weight: .regular)
+        hint.textColor = .secondaryLabelColor
+        hint.lineBreakMode = .byWordWrapping
+        hint.maximumNumberOfLines = 0
+        stack.addArrangedSubview(hint)
+        hint.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+
+        let rows = NSStackView()
+        rows.orientation = .vertical
+        rows.spacing = 6
+        rows.alignment = .leading
+        rows.identifier = NSUserInterfaceItemIdentifier("diagRows")
+        stack.addArrangedSubview(rows)
+        rows.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+
+        container.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: container.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor),
+        ])
+
+        diagRows = rows
+        // No probing here: the view is not in the hierarchy yet. The caller
+        // kicks off `refreshDiagnostics()` once it has been added.
+        return container
+    }
+
+    private func refreshDiagnostics() {
+        guard let rows = diagRows else { return }
+        rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        let loading = NSTextField(labelWithString: L.t(.cleaning))
+        loading.font = NSFont.systemFont(ofSize: 12)
+        loading.textColor = .secondaryLabelColor
+        rows.addArrangedSubview(loading)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let results = Diagnostics.runAll()
+            DispatchQueue.main.async {
+                guard let self = self,
+                      let rows = self.diagRows else { return }
+                rows.arrangedSubviews.forEach { $0.removeFromSuperview() }
+                for result in results {
+                    let view = self.makeDiagnosticRow(result)
+                    rows.addArrangedSubview(view)
+                    view.widthAnchor.constraint(equalTo: rows.widthAnchor).isActive = true
+                }
+            }
+        }
+    }
+
+    private func makeDiagnosticRow(_ result: DiagnosticResult) -> NSView {
+        let symbol: String
+        let color: NSColor
+        switch result.level {
+        case .ok: symbol = "checkmark.circle.fill"; color = .systemGreen
+        case .warn: symbol = "exclamationmark.triangle.fill"; color = .systemOrange
+        case .fail: symbol = "xmark.octagon.fill"; color = .systemRed
+        }
+
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+        icon.contentTintColor = color
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+        let title = NSTextField(labelWithString: result.title)
+        title.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        title.textColor = .labelColor
+
+        let detail = NSTextField(labelWithString: result.detail)
+        detail.font = NSFont.systemFont(ofSize: 10, weight: .regular)
+        detail.textColor = .secondaryLabelColor
+        detail.lineBreakMode = .byWordWrapping
+        detail.maximumNumberOfLines = 0
+
+        let text = NSStackView(views: [title, detail])
+        text.orientation = .vertical
+        text.alignment = .leading
+        text.spacing = 1
+        text.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let row = NSStackView(views: [icon, text])
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.spacing = 8
+
+        if let fix = result.fix {
+            let button = NSButton(title: L.t(.openSettings), target: nil, action: nil)
+            button.bezelStyle = .inline
+            button.isBordered = false
+            button.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+            button.contentTintColor = .controlAccentColor
+            let handler = ActionHandler {
+                switch fix {
+                case .automation: PermissionCenter.openAutomationSettings()
+                case .screenRecording: PermissionCenter.openScreenRecordingSettings()
+                }
+            }
+            button.target = handler
+            button.action = #selector(ActionHandler.run)
+            objc_setAssociatedObject(button, "h", handler, .OBJC_ASSOCIATION_RETAIN)
+            row.addArrangedSubview(button)
+        }
+
+        let capsule = wrapInCapsule(row)
+        return capsule
     }
 
     // MARK: - Tab: Launch
@@ -578,6 +863,7 @@ final class DeckViewController: NSViewController {
 
     deinit {
         monitorTimer?.invalidate()
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -586,4 +872,86 @@ final class ActionHandler: NSObject {
     private let action: () -> Void
     init(action: @escaping () -> Void) { self.action = action }
     @objc func run() { action() }
+}
+
+/// An ordinary container whose origin is top-left. Used as the document view
+/// of a scroll view so its content is not bottom-anchored.
+final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
+/// A one-line, non-blocking status strip. Replaces the old modal alert, which
+/// interrupted the panel and hid the actual cause of a failure.
+final class StatusBanner: NSView {
+
+    private let label = NSTextField(labelWithString: "")
+    private let actionButton = NSButton(title: "", target: nil, action: nil)
+    private var action: (() -> Void)?
+    private var hideTimer: Timer?
+
+    init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 10
+        layer?.masksToBounds = true
+
+        label.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        label.lineBreakMode = .byTruncatingTail
+        label.maximumNumberOfLines = 2
+        label.textColor = .labelColor
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        actionButton.bezelStyle = .inline
+        actionButton.isBordered = false
+        actionButton.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        actionButton.contentTintColor = .controlAccentColor
+        actionButton.target = self
+        actionButton.action = #selector(fireAction)
+        actionButton.isHidden = true
+
+        let row = NSStackView(views: [label, actionButton])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 8
+        row.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(row)
+
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            row.topAnchor.constraint(equalTo: topAnchor, constant: 7),
+            row.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -7),
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func show(_ text: String, isError: Bool, actionTitle: String? = nil, action: (() -> Void)? = nil) {
+        label.stringValue = text
+        label.textColor = isError ? .systemRed : .secondaryLabelColor
+        layer?.backgroundColor = (isError
+            ? NSColor.systemRed.withAlphaComponent(0.12)
+            : NSColor.white.withAlphaComponent(0.08)).cgColor
+
+        self.action = action
+        if let actionTitle = actionTitle {
+            actionButton.title = actionTitle
+            actionButton.isHidden = false
+        } else {
+            actionButton.isHidden = true
+        }
+
+        isHidden = false
+
+        hideTimer?.invalidate()
+        hideTimer = Timer.scheduledTimer(withTimeInterval: isError ? 8 : 3, repeats: false) { [weak self] _ in
+            self?.isHidden = true
+        }
+    }
+
+    @objc private func fireAction() {
+        action?()
+    }
 }

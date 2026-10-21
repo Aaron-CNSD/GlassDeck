@@ -4,24 +4,67 @@ import Vision
 /// Dev tools: screenshot, screen recording, OCR text extraction.
 enum DevTools {
 
-    // MARK: - Screenshot (uses built-in screencapture CLI)
+    // MARK: - Shared runner
 
-    static func captureScreenshot() {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-i", "-c"] // interactive + copy to clipboard
-        try? process.run()
-        process.waitUntilExit()
+    /// `screencapture` in interactive mode stays alive until the user either
+    /// takes the shot or presses Esc — seconds to minutes. It used to be run on
+    /// the main thread with `waitUntilExit()`, which froze the whole app with no
+    /// hint that anything was happening. Now it runs on a background queue and
+    /// reports back exactly once.
+    private static func runScreencapture(_ args: [String],
+                                         completion: @escaping (String?) -> Void) {
+        guard PermissionCenter.screenRecording() else {
+            // Triggers the system prompt so the app lands in the Screen
+            // Recording list instead of failing silently forever.
+            PermissionCenter.requestScreenRecording()
+            DispatchQueue.main.async {
+                completion(L.t(.screenRecordingNeeded))
+            }
+            return
+        }
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+            process.arguments = args
+            let errPipe = Pipe()
+            process.standardError = errPipe
+            process.standardOutput = FileHandle.nullDevice
+
+            do {
+                try process.run()
+            } catch {
+                DispatchQueue.main.async { completion(error.localizedDescription) }
+                return
+            }
+            process.waitUntilExit()
+
+            if process.terminationStatus != 0 {
+                let data = errPipe.fileHandleForReading.readDataToEndOfFile()
+                let message = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                DispatchQueue.main.async {
+                    completion(message.isEmpty ? "screencapture exit \(process.terminationStatus)" : message)
+                }
+            } else {
+                DispatchQueue.main.async { completion(nil) }
+            }
+        }
     }
 
-    // MARK: - Screen recording (opens QuickTime-style via screencapture)
+    // MARK: - Screenshot (built-in screencapture CLI, straight to clipboard)
 
-    static func recordScreen() {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-v", "-i"] // video + interactive region
-        try? process.run()
-        process.waitUntilExit()
+    static func captureScreenshot(completion: @escaping (String?) -> Void) {
+        runScreencapture(["-i", "-c", "-x"], completion: completion)
+    }
+
+    // MARK: - Screen recording
+
+    /// Starts the interactive video recording UI with its toolbar. Recording
+    /// keeps going until the user presses Stop; the file lands wherever macOS
+    /// saves screen recordings (Desktop by default).
+    static func recordScreen(completion: @escaping (String?) -> Void) {
+        runScreencapture(["-v", "-i", "-U"], completion: completion)
     }
 
     // MARK: - OCR

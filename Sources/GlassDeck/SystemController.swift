@@ -4,37 +4,98 @@ import AppKit
 ///
 /// Most toggles shell out to system defaults / AppleScript because those are
 /// the only public, App-Sandbox-friendly ways to flip many system prefs.
+///
+/// Every action reports back through one of the two notifications below, so a
+/// denied permission can never again look like a dead button.
 enum SystemController {
 
-    // MARK: - Helpers
+    // MARK: - Reporting
 
-    /// Run a command without blocking the caller (fire-and-forget).
-    /// Most toggle actions call this so the UI thread never stalls.
-    private static func run(_ args: [String]) {
-        runAsync(args)
-    }
+    /// Posted on the main thread after a user action succeeded.
+    /// `userInfo["label"]` carries the human-readable action name.
+    static let commandSucceeded = Notification.Name("GlassDeckCommandSucceeded")
 
-    /// Run a command on a background queue, off the UI thread.
-    private static func runAsync(_ args: [String]) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-            process.arguments = args
-            try? process.run()
-            process.waitUntilExit()
+    /// Posted on the main thread when a command exits non-zero.
+    /// `userInfo`: `label`, `code`, `message`, and `permission` (Bool).
+    static let commandFailed = Notification.Name("GlassDeckCommandFailed")
+
+    private static func post(_ name: Notification.Name, label: String, extra: [String: Any] = [:]) {
+        var info: [String: Any] = ["label": label]
+        extra.forEach { info[$0.key] = $0.value }
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: name, object: nil, userInfo: info)
         }
     }
 
-    /// Run a command synchronously and return its stdout. Used only for reads,
-    /// which are fast and must return a value.
+    private static func reportSuccess(_ label: String) {
+        post(commandSucceeded, label: label)
+    }
+
+    private static func reportFailure(_ label: String, code: Int32, message: String) {
+        let combined = message.lowercased()
+        let isPermission = combined.contains("-1743")
+            || combined.contains("not authorized")
+            || combined.contains("not permitted")
+            || combined.contains("operation not permitted")
+        var detail = message
+        if isPermission {
+            detail = L.t(.automationDeniedHint)
+        } else if detail.isEmpty {
+            detail = "exit \(code)"
+        } else if detail.count > 220 {
+            detail = String(detail.prefix(220))
+        }
+        post(commandFailed, label: label, extra: ["code": code, "message": detail, "permission": isPermission])
+    }
+
+    // MARK: - Process helpers
+
+    /// Runs the given commands in order on a background queue and reports a
+    /// single success / failure for the whole group. `stdout` is sent to the
+    /// null device — a `Pipe` nobody reads would block once it filled up.
+    private static func runSequence(_ commands: [[String]], label: String) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            for args in commands {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+                process.arguments = args
+                let errPipe = Pipe()
+                process.standardError = errPipe
+                process.standardOutput = FileHandle.nullDevice
+
+                do {
+                    try process.run()
+                } catch {
+                    reportFailure(label, code: -1, message: error.localizedDescription)
+                    return
+                }
+                process.waitUntilExit()
+
+                if process.terminationStatus != 0 {
+                    let data = errPipe.fileHandleForReading.readDataToEndOfFile()
+                    let message = String(data: data, encoding: .utf8)?
+                        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    reportFailure(label, code: process.terminationStatus, message: message)
+                    return
+                }
+            }
+            reportSuccess(label)
+        }
+    }
+
+    private static func run(_ args: [String], label: String) {
+        runSequence([args], label: label)
+    }
+
+    /// Runs synchronously and returns stdout. Only for fast reads.
     private static func runSync(_ args: [String]) -> String? {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = args
         let pipe = Pipe()
         process.standardOutput = pipe
-        process.standardError = Pipe()
-        try? process.run()
+        process.standardError = FileHandle.nullDevice
+        do { try process.run() } catch { return nil }
         process.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -44,61 +105,67 @@ enum SystemController {
         return runSync(["/usr/bin/defaults", "read", domain, key])
     }
 
-    private static func defaultsWrite(_ key: String, value: String, domain: String) {
-        run(["/usr/bin/defaults", "write", domain, key, value])
-    }
-
-    private static func osascript(_ source: String) {
-        run(["/usr/bin/osascript", "-e", source])
+    private static func osascript(_ source: String, label: String) {
+        run(["/usr/bin/osascript", "-e", source], label: label)
     }
 
     // MARK: - Dark Mode
 
+    /// Reads the system setting, not the app's own appearance. The old version
+    /// used `NSApp.effectiveAppearance`, which describes this window — so after
+    /// flipping the switch it always snapped straight back.
     static var isDarkMode: Bool {
-        return NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return runSync(["/usr/bin/defaults", "read", "-g", "AppleInterfaceStyle"]) == "Dark"
     }
 
+    /// Dark mode is a System Events setting, so this needs Automation
+    /// permission. It is granted once and remembered by macOS.
     static func setDarkMode(_ on: Bool) {
-        let mode = on ? "dark" : "light"
-        osascript("tell application \"System Events\" to tell appearance preferences to set dark mode to \(on)")
-        _ = mode
+        osascript("tell application \"System Events\" to tell appearance preferences to set dark mode to \(on)",
+                  label: L.t(.darkMode))
     }
 
     // MARK: - Hidden Files (Finder)
 
     static var showHiddenFiles: Bool {
-        return defaultsRead("AppleShowAllFiles", domain: "com.apple.finder") == "YES" ||
-               defaultsRead("AppleShowAllFiles", domain: "com.apple.finder") == "1"
+        let v = defaultsRead("AppleShowAllFiles", domain: "com.apple.finder")
+        return v == "YES" || v == "1" || v == "true"
     }
 
     static func setShowHiddenFiles(_ on: Bool) {
-        defaultsWrite("AppleShowAllFiles", value: on ? "YES" : "NO", domain: "com.apple.finder")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "com.apple.finder", "AppleShowAllFiles", on ? "YES" : "NO"],
+            ["/usr/bin/killall", "Finder"],
+        ], label: L.t(.hiddenFiles))
     }
 
     // MARK: - Show Path Bar in Finder
 
     static var showPathBar: Bool {
-        return defaultsRead("ShowPathbar", domain: "com.apple.finder") == "YES" ||
-               defaultsRead("ShowPathbar", domain: "com.apple.finder") == "1"
+        let v = defaultsRead("ShowPathbar", domain: "com.apple.finder")
+        return v == "YES" || v == "1" || v == "true"
     }
 
     static func setShowPathBar(_ on: Bool) {
-        defaultsWrite("ShowPathbar", value: on ? "YES" : "NO", domain: "com.apple.finder")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "com.apple.finder", "ShowPathbar", on ? "YES" : "NO"],
+            ["/usr/bin/killall", "Finder"],
+        ], label: L.t(.pathBar))
     }
 
     // MARK: - Hide Desktop Icons
 
     static var hideDesktopIcons: Bool {
-        return defaultsRead("CreateDesktop", domain: "com.apple.finder") == "false" ||
-               defaultsRead("CreateDesktop", domain: "com.apple.finder") == "0"
+        let v = defaultsRead("CreateDesktop", domain: "com.apple.finder")
+        return v == "false" || v == "0"
     }
 
     static func setHideDesktopIcons(_ on: Bool) {
         // CreateDesktop = false hides icons
-        defaultsWrite("CreateDesktop", value: on ? "false" : "true", domain: "com.apple.finder")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "com.apple.finder", "CreateDesktop", on ? "false" : "true"],
+            ["/usr/bin/killall", "Finder"],
+        ], label: L.t(.desktopIcons))
     }
 
     // MARK: - Keep Awake (caffeinate)
@@ -108,81 +175,98 @@ enum SystemController {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/caffeinate")
             process.arguments = ["-d", "-i", "-m", "-s"]
-            process.standardOutput = Pipe()
-            process.standardError = Pipe()
-            try? process.run()
-            // Store the process reference so we can kill it later.
-            KeepAwakeManager.shared.process = process
+            process.standardOutput = FileHandle.nullDevice
+            process.standardError = FileHandle.nullDevice
+            do {
+                try process.run()
+                KeepAwakeManager.shared.process = process
+                reportSuccess(L.t(.keepAwake))
+            } catch {
+                reportFailure(L.t(.keepAwake), code: -1, message: error.localizedDescription)
+            }
         } else {
             KeepAwakeManager.shared.stop()
+            reportSuccess(L.t(.keepAwake))
         }
     }
 
     static var isKeepAwake: Bool {
-        return KeepAwakeManager.shared.process != nil
+        return KeepAwakeManager.shared.isRunning
     }
 
     // MARK: - Mute
 
     static var isMuted: Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", "output muted of (get volume settings)"]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
-        try? process.run()
-        process.waitUntilExit()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let out = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let out = runSync(["/usr/bin/osascript", "-e", "output muted of (get volume settings)"])
         return out == "true"
     }
 
     static func setMuted(_ on: Bool) {
-        osascript("set volume output muted \(on)")
+        // `set volume` is a Standard Additions command — no Automation grant needed.
+        osascript("set volume output muted \(on)", label: L.t(.mute))
     }
 
     // MARK: - Auto-Hide Dock
 
     static var autoHideDock: Bool {
-        return defaultsRead("autohide", domain: "com.apple.dock") == "1" ||
-               defaultsRead("autohide", domain: "com.apple.dock") == "true"
+        let v = defaultsRead("autohide", domain: "com.apple.dock")
+        return v == "1" || v == "true"
     }
 
     static func setAutoHideDock(_ on: Bool) {
-        defaultsWrite("autohide", value: on ? "1" : "0", domain: "com.apple.dock")
-        run(["/usr/bin/killall", "Dock"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "com.apple.dock", "autohide", "-bool", on ? "true" : "false"],
+            ["/usr/bin/killall", "Dock"],
+        ], label: L.t(.autoHideDock))
     }
 
     // MARK: - Empty Trash
 
     static func emptyTrash() {
-        osascript("tell application \"Finder\" to empty trash")
+        osascript("tell application \"Finder\" to empty trash", label: L.t(.emptyTrash))
     }
 
     // MARK: - Empty Clipboard
 
     static func emptyClipboard() {
-        let pb = NSPasteboard.general
-        pb.clearContents()
+        NSPasteboard.general.clearContents()
+        reportSuccess(L.t(.emptyClipboard))
     }
 
     // MARK: - Screen Saver (start now)
 
     static func startScreenSaver() {
-        run(["/usr/bin/open", "-a", "ScreenSaverEngine"])
+        run(["/usr/bin/open", "-a", "ScreenSaverEngine"], label: L.t(.screenSaver))
     }
 
-    // MARK: - Hide Notch / Menu Bar
+    // MARK: - Auto-Hide Menu Bar
 
+    /// "Automatically hide and show the menu bar" — the real, visible setting.
+    ///
+    /// The old implementation wrote `AppleMenuBarVisibleInFullscreen` into the
+    /// Finder domain, which does nothing outside full screen. That toggle could
+    /// never have worked.
     static var hideMenuBar: Bool {
-        return defaultsRead("_HIHideMenuBar", domain: "com.apple.finder") == "true" ||
-               defaultsRead("AppleMenuBarVisibleInFullscreen", domain: "NSGlobalDomain") == "0"
+        let v = defaultsRead("_HIHideMenuBar", domain: "NSGlobalDomain")
+        return v == "1" || v == "true"
     }
 
     static func setHideMenuBar(_ on: Bool) {
-        defaultsWrite("AppleMenuBarVisibleInFullscreen", value: on ? "0" : "1", domain: "NSGlobalDomain")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "NSGlobalDomain", "_HIHideMenuBar", "-bool", on ? "true" : "false"],
+            ["/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings", "-u"],
+        ], label: L.t(.hideMenuBar))
+        // The menu bar itself is drawn by SystemUIServer; bouncing it applies
+        // the change instantly instead of after the next login.
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.6) {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
+            p.arguments = ["SystemUIServer"]
+            p.standardOutput = FileHandle.nullDevice
+            p.standardError = FileHandle.nullDevice
+            try? p.run()
+            p.waitUntilExit()
+        }
     }
 
     // MARK: - Natural Scrolling
@@ -193,8 +277,11 @@ enum SystemController {
     }
 
     static func setNaturalScrolling(_ on: Bool) {
-        defaultsWrite("com.apple.swipescrolldirection", value: on ? "true" : "false", domain: "NSGlobalDomain")
-        run(["/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings", "-u"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "NSGlobalDomain", "com.apple.swipescrolldirection",
+             "-bool", on ? "true" : "false"],
+            ["/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings", "-u"],
+        ], label: L.t(.naturalScrolling))
     }
 
     // MARK: - Finder Status Bar
@@ -205,8 +292,10 @@ enum SystemController {
     }
 
     static func setShowStatusBar(_ on: Bool) {
-        defaultsWrite("ShowStatusBar", value: on ? "true" : "false", domain: "com.apple.finder")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "com.apple.finder", "ShowStatusBar", "-bool", on ? "true" : "false"],
+            ["/usr/bin/killall", "Finder"],
+        ], label: L.t(.showStatusBar))
     }
 
     // MARK: - File Extensions
@@ -217,20 +306,24 @@ enum SystemController {
     }
 
     static func setShowAllExtensions(_ on: Bool) {
-        defaultsWrite("AppleShowAllExtensions", value: on ? "true" : "false", domain: "NSGlobalDomain")
-        run(["/usr/bin/killall", "Finder"])
+        runSequence([
+            ["/usr/bin/defaults", "write", "NSGlobalDomain", "AppleShowAllExtensions", "-bool", on ? "true" : "false"],
+            ["/usr/bin/killall", "Finder"],
+        ], label: L.t(.showAllExtensions))
     }
 
     // MARK: - Maintenance
 
     /// Flush the DNS resolver cache and restart mDNSResponder.
     static func flushDNSCache() {
-        run(["/usr/bin/dscacheutil", "-flushcache"])
-        run(["/usr/bin/killall", "-HUP", "mDNSResponder"])
+        runSequence([
+            ["/usr/bin/dscacheutil", "-flushcache"],
+            ["/usr/bin/killall", "-HUP", "mDNSResponder"],
+        ], label: L.t(.dnsCache))
     }
 
     static func restartFinder() {
-        run(["/usr/bin/killall", "Finder"])
+        run(["/usr/bin/killall", "Finder"], label: L.t(.restartFinder))
     }
 
     /// Best-effort local IPv4 address (Wi-Fi first, then Ethernet).
@@ -246,7 +339,7 @@ enum SystemController {
     /// Put the display to sleep, which locks the Mac when "require password"
     /// is enabled. CGSession is gone on recent macOS, so pmset is the way.
     static func lockScreen() {
-        run(["/usr/bin/pmset", "displaysleepnow"])
+        run(["/usr/bin/pmset", "displaysleepnow"], label: L.t(.lockScreen))
     }
 }
 
@@ -254,6 +347,12 @@ enum SystemController {
 final class KeepAwakeManager {
     static let shared = KeepAwakeManager()
     var process: Process?
+
+    /// True only while the child is genuinely alive — a caffeinate that exited
+    /// (unplugged, display slept) must not read back as "on".
+    var isRunning: Bool {
+        return process?.isRunning ?? false
+    }
 
     func stop() {
         process?.terminate()
