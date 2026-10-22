@@ -10,7 +10,7 @@
 [![Release](https://img.shields.io/github/v/release/Aaron-CNSD/GlassDeck?color=5b8cff&label=release)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-8b5cf6)](LICENSE)
 [![i18n](https://img.shields.io/badge/i18n-5%20languages-22d3ee)](Sources/GlassDeck/Localization.swift)
-[![Size](https://img.shields.io/badge/download-1.6%20MB-111)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
+[![Size](https://img.shields.io/badge/download-2.8%20MB-111)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
 
 [**Download**](https://github.com/Aaron-CNSD/GlassDeck/releases/latest) &nbsp;·&nbsp; [Website](https://aarongame.com) &nbsp;·&nbsp; [Changelog](https://github.com/Aaron-CNSD/GlassDeck/releases)
 
@@ -26,7 +26,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.5.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.5.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.5.1.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.5.1.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>
@@ -43,7 +43,7 @@ Then open it normally. Homebrew users are unaffected — Homebrew clears the fla
 
 </details>
 
-**No telemetry. No account. No network calls except the ones you ask for.** 1.6 MB — this is AppKit, not Electron.
+**No telemetry. No account. No network calls except the ones you ask for.** 2.8 MB universal binary (Apple Silicon **and** Intel) — this is AppKit, not Electron.
 
 ---
 
