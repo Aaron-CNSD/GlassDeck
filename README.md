@@ -1,187 +1,174 @@
-# Glass Deck 🪟✨
+<div align="center">
 
-**Your Mac, at a glance.** A Liquid Glass control deck for macOS — system toggles, live monitoring, window management, cleanup tools, and desktop widgets, all wrapped in Apple's native refractive glass.
+<img src="docs/hero.png" alt="Glass Deck — a Liquid Glass control deck for macOS" width="100%">
 
-Glass Deck puts your most-used controls into a single, beautiful **Liquid Glass** panel — the same refractive, self-lit glass aesthetic Apple introduced in macOS 26 (Tahoe). Click the menu bar icon (a glass prism), flip a switch, done. It also ships a **desktop widget** so you can flip switches straight from the desktop.
+# Glass Deck
 
-<p align="center">
-  <a href="https://aarongame.com">🌐 Website</a> &nbsp;·&nbsp;
-  <a href="https://github.com/Aaron-CNSD/GlassDeck/releases">⬇️ Download</a>
-</p>
+**Eleven system switches, live monitoring and cache cleanup — in one glass panel in your menu bar.**
+
+[![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-111?logo=apple&logoColor=white)](https://aarongame.com)
+[![Release](https://img.shields.io/github/v/release/Aaron-CNSD/GlassDeck?color=5b8cff&label=release)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-8b5cf6)](LICENSE)
+[![i18n](https://img.shields.io/badge/i18n-5%20languages-22d3ee)](Sources/GlassDeck/Localization.swift)
+[![Size](https://img.shields.io/badge/download-1.6%20MB-111)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
+
+[**Download**](https://github.com/Aaron-CNSD/GlassDeck/releases/latest) &nbsp;·&nbsp; [Website](https://aarongame.com) &nbsp;·&nbsp; [Changelog](https://github.com/Aaron-CNSD/GlassDeck/releases)
+
+</div>
 
 ---
 
-## ✨ Why Glass Deck?
+## Install
 
-There are plenty of "system switch" apps out there (shout-out to [OnlySwitch](https://github.com/jacklandrin/OnlySwitch), the O.G.). Glass Deck is different in a few specific ways:
+```bash
+brew tap Aaron-CNSD/tap
+brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party casks
+brew install --cask glassdeck
+```
 
-- **Native `NSGlassEffectView`** on macOS 26+ — real refractive glass with a self-lit rim, rendered by the OS. Not a hand-rolled blur approximation.
-- **Graceful fallback** to frosted `NSVisualEffectView` on macOS 14–15.
-- **Desktop widgets** (WidgetKit) for quick switch access without opening the app.
-- **Five languages** out of the box — English, 简体中文, 繁體中文, 日本語, 한국어.
-- **No private APIs.** Everything ships through public AppKit, CoreGraphics, Vision + system commands.
+Or grab the DMG directly: **[Glass.Deck.v1.5.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.5.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
-## 🎛️ Features
+<details>
+<summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>
 
-### System Switches
-| Control | Description |
+<br>
+
+Glass Deck is open source and **not notarized** (that needs a $99/year Apple Developer account). macOS quarantines unsigned downloads, so you have to clear the flag once:
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/GlassDeck.app"
+```
+
+Then open it normally. Homebrew users are unaffected — Homebrew clears the flag for you.
+
+</details>
+
+**No telemetry. No account. No network calls except the ones you ask for.** 1.6 MB — this is AppKit, not Electron.
+
+---
+
+## Why another switch app?
+
+There are good ones already ([OnlySwitch](https://github.com/jacklandrin/OnlySwitch) is the classic). Glass Deck exists because of four specific annoyances:
+
+| Annoyance | What Glass Deck does |
 | --- | --- |
-| 🌙 Dark Mode | Toggle system-wide dark mode |
-| 👁️ Show Hidden Files | Flip Finder's hidden-file visibility |
-| 📁 Finder Path Bar | Show/hide the path bar in Finder |
-| 🖥️ Hide Desktop Icons | Clean your desktop for screenshots |
-| 😴 Keep Awake | Prevent sleep via `caffeinate` |
-| 🔇 Mute | Mute/unmute system audio |
-| 🚢 Auto-Hide Dock | Auto-hide the Dock |
-| 📊 Hide Menu Bar | Hide the menu bar / notch |
-| 🖱️ Natural Scrolling | Invert scroll direction |
-| 📊 Show Status Bar | Show/hide the Finder status bar |
-| 🔤 Show All Extensions | Always show file extensions in Finder |
+| Flipping four switches one at a time before a meeting | **Scenes** — Present / Focus / Tidy / All Off, one click |
+| Scrolling a dozen capsules hunting for one toggle | **Search** — type three letters, the list filters |
+| Digging through the panel to reach the same switches daily | **Desktop widgets** (small / medium / large) + a **menu bar** scene menu |
+| “Cache cleaner” apps that show a scary number then ask for money | **Cleaner** that lists exactly what it will delete, and deletes only that |
+
+And one technical point: on macOS 26+ the panel uses **`NSGlassEffectView`** — the OS renders the real refractive glass, including the self-lit rim. It is not a hand-rolled blur. On macOS 14–15 it falls back to `NSVisualEffectView`.
+
+## What's inside
+
+<table>
+<tr><td width="50%" valign="top">
+
+**Switches (11)**
+🌙 Dark Mode · 👁️ Hidden Files · 📁 Finder Path Bar · 🖥️ Hide Desktop Icons · 😴 Keep Awake · 🔇 Mute · 🚢 Auto-Hide Dock · 📊 Hide Menu Bar · 🖱️ Natural Scrolling · 📊 Status Bar · 🔤 File Extensions
+
+**Monitor**
+Live CPU / memory / network throughput, read through the public `host_statistics` API — no kernel extensions, no private frameworks.
+
+</td><td width="50%" valign="top">
+
+**Windows**
+Every running app in a list, with *bring to front* and **force quit** — the button macOS doesn't give you.
+
+**Cleaner**
+Scans Xcode DerivedData, Homebrew / CocoaPods / SwiftPM caches, tells you what each one weighs before you commit.
+
+**Tools**
+Screenshot, screen recording, and **clipboard OCR** (Vision framework — copy an image, get text back).
+
+**Launch**
+Pin the URLs, files and commands you open ten times a day.
+
+</td></tr>
+</table>
 
 ### Scenes
-A scene flips several switches at once. Reachable from the panel **and** the menu bar, so you never have to open the deck for a routine change.
 
 | Scene | What it flips |
 | --- | --- |
 | 🎬 **Present** | Hide desktop icons · auto-hide Dock · hide menu bar |
 | 🌙 **Focus** | Mute · hide desktop icons |
-| ✨ **Tidy** | Turn off hidden files, path bar, status bar and extension labels |
-| ⏻ **All Off** | Every switch in the deck, off |
+| ✨ **Tidy** | Hidden files off · path bar off · status bar off · extensions off |
+| ⏻ **All Off** | Every switch in the deck |
 
-The switch list also has an inline **search field**, because scrolling a dozen capsules to find "Natural Scrolling" got old.
+## Screenshot
 
-### Advanced Tools
-| Tab | What it does |
-| --- | --- |
-| 📈 **Monitor** | Live CPU / memory / network throughput (public `host_statistics` API) |
-| 🪟 **Windows** | List running apps, bring to front, or **force quit** — a button macOS doesn't give you |
-| 🗑️ **Cleaner** | Scan & clear Xcode DerivedData, Homebrew / CocoaPods / SwiftPM caches, and report freed space |
-| 🛠️ **Tools** | Screenshot, screen record, and **clipboard OCR** (Vision framework, returns text to clipboard) |
-| ⚡ **Launch** | Pin your favorite URLs / commands / files for one-click launch |
+<p align="center"><img src="docs/screenshot-switches.png" width="380" alt="Glass Deck panel"></p>
 
-### Desktop Widgets (3 sizes)
-A WidgetKit widget with **system small / medium / large** variants — a grid of switches you can flip directly from the desktop, synced with the app via `defaults`.
+## Languages
 
-## 🌍 Localization
+English · 简体中文 · 繁體中文 · 日本語 · 한국어 — auto-detected from the system, overridable from the menu.
 
-Glass Deck auto-detects your system language and supports:
-
-| Code | Language |
-| --- | --- |
-| `en` | English |
-| `zh-Hans` | 简体中文 |
-| `zh-Hant` | 繁體中文 |
-| `ja` | 日本語 |
-| `ko` | 한국어 |
-
-## 🚀 Requirements
-
-- macOS **14.0** or later (Liquid Glass fully activates on **macOS 26+**)
-- Apple Silicon or Intel
-- Xcode 15+ (or just the Swift toolchain — see below)
-
-## 📦 Installation
-
-### Option 1 — Open in Xcode (full app + widget)
+## Build from source
 
 ```bash
-git clone https://github.com/yourname/GlassDeck.git
+git clone https://github.com/Aaron-CNSD/GlassDeck.git
 cd GlassDeck
-# If you have XcodeGen installed:
-xcodegen generate
-open GlassDeck.xcodeproj
-# Otherwise open the Swift package:
-open Package.swift
+./build-app.sh                 # app only, no Xcode required
+open build/GlassDeck.app
 ```
 
-Press **⌘R** to build & run. The menu bar icon (glass prism) appears top-right.
-
-> ⚠️ **Widgets require Xcode.** The WidgetKit extension (`.appex`) cannot be built with `swift build` — it needs a full Xcode app-extension target. The `project.yml` (XcodeGen) already declares it; run `xcodegen generate` to produce the project, then ⌘R.
-
-### Option 2 — Command line (app only, no widget)
+For the widget extension you need full Xcode:
 
 ```bash
-cd GlassDeck
-./build-app.sh
-open build/Glass\ Deck.app
+xcodegen generate && open GlassDeck.xcodeproj   # ⌘R
 ```
 
-## 🏗️ Project Structure
+<details>
+<summary>Project layout</summary>
 
 ```
-GlassDeck/
-├── Sources/
-│   ├── GlassDeck/               # Main app (AppKit)
-│   │   ├── main.swift           # Entry point
-│   │   ├── AppDelegate.swift    # Menu bar item + popover + window
-│   │   ├── GlassPanel.swift     # Liquid Glass surface (NSGlassEffectView)
-│   │   ├── Localization.swift   # 5-language string tables
-│   │   ├── SystemController.swift   # System state manipulation
-│   │   ├── SystemMonitor.swift      # CPU / memory / network
-│   │   ├── WindowController.swift   # Window list / activate / force quit
-│   │   ├── DiskCleaner.swift        # Cache scanning & cleanup
-│   │   ├── DisplayController.swift  # Resolution / refresh rate
-│   │   ├── QuickLaunch.swift        # Pinned shortcuts
-│   │   ├── DevTools.swift           # Screenshot / record / OCR
-│   │   ├── Toggle.swift / ToggleRowView.swift
-│   │   └── DeckViewController.swift # The control deck layout
-│   └── Shared/
-│       └── WidgetSwitch.swift   # Switch model shared with the widget
-├── Widget/                       # WidgetKit extension (3 sizes)
-│   ├── GlassDeckWidget.swift
-│   ├── GlassDeckWidgetView.swift
-│   └── Info.plist
-├── Resources/
-│   └── AppIcon.appiconset/      # App icon (glass prism)
-├── GlassDeck.xcodeproj/         # Xcode project (optional)
-├── project.yml                  # XcodeGen spec (main app + widget + shared)
-├── Package.swift                # Swift Package (CLI build path)
-├── build-app.sh                 # CLI .app assembler
-└── LICENSE
+Sources/GlassDeck/     Main app (pure AppKit)
+  GlassPanel.swift       Liquid Glass surface (NSGlassEffectView)
+  DeckViewController.swift  The panel layout
+  Scenes.swift           Multi-switch presets
+  SystemController.swift System state read/write
+  Localization.swift     5-language string tables
+Sources/Shared/        Model shared with the widget
+Widget/                WidgetKit extension (3 sizes)
+website/               Landing page (Cloudflare Worker)
 ```
+</details>
 
-## 🧠 How the Glass Works
+## How the glass works
 
 ```swift
-// GlassPanel.swift (simplified)
 if #available(macOS 26.0, *) {
-    let glass = NSGlassEffectView()      // real Liquid Glass
+    let glass = NSGlassEffectView()
     glass.cornerRadius = 24
-    glass.tintColor = .controlAccentColor
-    glass.contentView = myContent        // content goes HERE, not on the glass
+    glass.contentView = myContent      // content goes HERE…
 } else {
-    let effect = NSVisualEffectView()    // frosted fallback
+    let effect = NSVisualEffectView()  // …frosted fallback
     effect.material = .hudWindow
-    effect.blendingMode = .behindWindow
 }
 ```
 
-The key rule (straight from Apple's guidance): **put content into `contentView`, never `addSubview` directly onto the glass** — that's the only place guaranteed to sit inside the glass layer.
+The one rule from Apple's guidance: **put content into `contentView`, never `addSubview` onto the glass** — only `contentView` is guaranteed to sit inside the glass layer.
 
-## 🌐 Website
+## Contributing
 
-The landing page lives in `website/` and is served from **[aarongame.com](https://aarongame.com)** by a Cloudflare Worker (`aarongame`) with static assets.
-
-```bash
-npx wrangler deploy --config deploy/wrangler.jsonc
-```
-
-`deploy/worker.js` serves the static files and 301s any retired URL to the homepage, so old inbound links keep their value instead of dying as 404s.
-
-> Note: don't add a `_redirects` file here — on Workers static assets its rules are evaluated *before* asset matching, which redirects the whole site into a loop.
-
-## 🤝 Contributing
-
-Pull requests welcome. Toggles are dead-simple to add — just append a `Toggle` entry in `DeckViewController.swift`:
+Adding a switch is a dozen lines — append a `Toggle` and its translations:
 
 ```swift
 Toggle(id: "mynewtoggle", title: L.t(.myNewToggle), symbol: "sparkles",
        isOn: { /* read state */ },
-       setState: { /* apply state */ }),
+       setState: { /* apply state */ })
 ```
 
-And add the matching `L.Key` + translations in `Localization.swift`.
+Ideas that would help most: more scenes, per-scene hotkeys, a Shortcuts/App Intents bridge, Spanish and German translations. Open an issue before a big PR so we don't collide.
 
-## 📄 License
+## License
 
-[MIT](LICENSE) © 2026
+[MIT](LICENSE) © 2026 Aaron
+
+<div align="center"><br>
+
+If Glass Deck earns a place in your menu bar, **a ⭐ helps other people find it** — it is the only signal that ranks a small project above the noise.
+
+</div>
