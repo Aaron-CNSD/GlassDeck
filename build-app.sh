@@ -7,7 +7,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 echo "==> Building GlassDeck..."
-swift build -c release
+# --disable-sandbox: SwiftPM wraps the manifest compiler in its own sandbox,
+# which fails outright when this script itself runs inside one.
+swift build -c release --disable-sandbox
 
 APP="build/GlassDeck.app"
 BIN=".build/release/GlassDeck"
@@ -33,7 +35,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.5.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>

@@ -181,9 +181,16 @@ final class DeckViewController: NSViewController {
     // MARK: - Tab: Toggles
 
     private var toggleRows: [ToggleRowView] = []
+    /// The glass capsule wrapping each row, so search can hide whole cards.
+    private var toggleCapsules: [NSView] = []
+    /// Toggle descriptors, index-aligned with `toggleCapsules`.
+    private var toggleItems: [Toggle] = []
+    private var searchField: NSSearchField!
+    private var emptyHint: NSTextField!
 
     private func buildTogglesView() -> NSView {
         let toggles = ToggleLibrary.all
+        toggleItems = toggles
 
         let list = NSStackView()
         list.orientation = .vertical
@@ -200,11 +207,113 @@ final class DeckViewController: NSViewController {
             }
             toggleRows.append(row)
             let capsule = wrapInCapsule(row)
+            toggleCapsules.append(capsule)
             list.addArrangedSubview(capsule)
             capsule.widthAnchor.constraint(equalTo: list.widthAnchor).isActive = true
         }
 
-        return makeScrollableList(list)
+        let scroll = makeScrollableList(list)
+
+        // Search: with a dozen switches, scanning the list is the slow part.
+        let search = NSSearchField()
+        search.placeholderString = L.t(.searchPlaceholder)
+        search.target = self
+        search.action = #selector(searchChanged(_:))
+        search.controlSize = .regular
+        search.font = NSFont.systemFont(ofSize: 12)
+        search.translatesAutoresizingMaskIntoConstraints = false
+        searchField = search
+
+        // Scenes: one click instead of four flips.
+        let scenes = buildScenesRow()
+
+        let hint = NSTextField(labelWithString: L.t(.noMatches))
+        hint.font = NSFont.systemFont(ofSize: 12)
+        hint.textColor = .tertiaryLabelColor
+        hint.alignment = .center
+        hint.isHidden = true
+        hint.translatesAutoresizingMaskIntoConstraints = false
+        emptyHint = hint
+
+        let stack = NSStackView(views: [search, scenes, hint, scroll])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        for child in [search, scenes, hint, scroll] {
+            child.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        }
+
+        // Let the list absorb all leftover height.
+        scroll.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .vertical)
+        scroll.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .vertical)
+
+        return stack
+    }
+
+    /// A row of equal-width scene buttons under the search field.
+    private func buildScenesRow() -> NSView {
+        let row = NSStackView()
+        row.orientation = .horizontal
+        row.distribution = .fillEqually
+        row.spacing = 6
+        row.alignment = .centerY
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        for scene in SceneLibrary.all {
+            let button = NSButton(title: scene.title, target: self, action: #selector(sceneTapped(_:)))
+            if let image = NSImage(systemSymbolName: scene.symbol, accessibilityDescription: scene.title) {
+                button.image = image
+                button.imagePosition = .imageLeading
+                button.imageScaling = .scaleProportionallyDown
+            }
+            button.bezelStyle = .regularSquare
+            button.isBordered = false
+            button.controlSize = .small
+            button.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+            button.contentTintColor = .controlAccentColor
+            button.identifier = NSUserInterfaceItemIdentifier(scene.id)
+            button.toolTip = scene.title
+            button.wantsLayer = true
+            button.layer?.cornerRadius = 8
+            button.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.12).cgColor
+            button.translatesAutoresizingMaskIntoConstraints = false
+            button.heightAnchor.constraint(equalToConstant: 30).isActive = true
+            row.addArrangedSubview(button)
+        }
+
+        return row
+    }
+
+    @objc private func sceneTapped(_ sender: NSButton) {
+        guard let id = sender.identifier?.rawValue,
+              let scene = SceneLibrary.scene(id: id) else { return }
+
+        SceneLibrary.apply(scene) { [weak self] changed in
+            guard let self = self else { return }
+            let detail = changed == 0 ? scene.title : "\(scene.title) · \(changed)"
+            self.showStatus("\(L.t(.sceneApplied)) — \(detail)", isError: false)
+            self.refreshToggles()
+        }
+    }
+
+    @objc private func searchChanged(_ sender: NSSearchField) {
+        applyToggleFilter(sender.stringValue)
+    }
+
+    private func applyToggleFilter(_ query: String) {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        var visible = 0
+
+        for (index, toggle) in toggleItems.enumerated() where index < toggleCapsules.count {
+            let haystack = (toggle.title + " " + toggle.id).lowercased()
+            let matches = q.isEmpty || haystack.contains(q)
+            toggleCapsules[index].isHidden = !matches
+            if matches { visible += 1 }
+        }
+
+        emptyHint?.isHidden = visible > 0
     }
 
     /// Puts a vertical stack inside a scroll view so it starts at the TOP.

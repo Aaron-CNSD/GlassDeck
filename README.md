@@ -35,6 +35,20 @@ There are plenty of "system switch" apps out there (shout-out to [OnlySwitch](ht
 | 🚢 Auto-Hide Dock | Auto-hide the Dock |
 | 📊 Hide Menu Bar | Hide the menu bar / notch |
 | 🖱️ Natural Scrolling | Invert scroll direction |
+| 📊 Show Status Bar | Show/hide the Finder status bar |
+| 🔤 Show All Extensions | Always show file extensions in Finder |
+
+### Scenes
+A scene flips several switches at once. Reachable from the panel **and** the menu bar, so you never have to open the deck for a routine change.
+
+| Scene | What it flips |
+| --- | --- |
+| 🎬 **Present** | Hide desktop icons · auto-hide Dock · hide menu bar |
+| 🌙 **Focus** | Mute · hide desktop icons |
+| ✨ **Tidy** | Turn off hidden files, path bar, status bar and extension labels |
+| ⏻ **All Off** | Every switch in the deck, off |
+
+The switch list also has an inline **search field**, because scrolling a dozen capsules to find "Natural Scrolling" got old.
 
 ### Advanced Tools
 | Tab | What it does |

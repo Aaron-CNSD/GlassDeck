@@ -139,6 +139,10 @@ enum L {
 
         // Widget
         case widgetSwitchTitle, widgetEmpty
+
+        // Search & scenes
+        case searchPlaceholder, scenesTitle, scenePresentation, sceneFocus,
+             sceneTidy, sceneAllOff, noMatches, sceneApplied
     }
 }
 
@@ -248,6 +252,15 @@ private let en: [L.Key: String] = [
 
     .widgetSwitchTitle: "Quick Switches",
     .widgetEmpty: "Open Glass Deck to configure",
+
+    .searchPlaceholder: "Search switches",
+    .scenesTitle: "Scenes",
+    .scenePresentation: "Present",
+    .sceneFocus: "Focus",
+    .sceneTidy: "Tidy",
+    .sceneAllOff: "All Off",
+    .noMatches: "No switches match that search",
+    .sceneApplied: "Scene applied",
 ]
 
 // MARK: - 简体中文
@@ -356,6 +369,15 @@ private let zhHans: [L.Key: String] = [
 
     .widgetSwitchTitle: "快捷开关",
     .widgetEmpty: "打开玻璃面板进行配置",
+
+    .searchPlaceholder: "搜索开关",
+    .scenesTitle: "场景",
+    .scenePresentation: "演示",
+    .sceneFocus: "专注",
+    .sceneTidy: "整理",
+    .sceneAllOff: "全关",
+    .noMatches: "没有匹配的开关",
+    .sceneApplied: "场景已应用",
 ]
 
 // MARK: - 繁體中文
@@ -464,6 +486,15 @@ private let zhHant: [L.Key: String] = [
 
     .widgetSwitchTitle: "快捷開關",
     .widgetEmpty: "開啟玻璃面板進行設定",
+
+    .searchPlaceholder: "搜尋開關",
+    .scenesTitle: "場景",
+    .scenePresentation: "簡報",
+    .sceneFocus: "專注",
+    .sceneTidy: "整理",
+    .sceneAllOff: "全關",
+    .noMatches: "沒有符合的開關",
+    .sceneApplied: "場景已套用",
 ]
 
 // MARK: - 日本語
@@ -572,6 +603,15 @@ private let ja: [L.Key: String] = [
 
     .widgetSwitchTitle: "クイックスイッチ",
     .widgetEmpty: "グラスデッキを開いて設定",
+
+    .searchPlaceholder: "スイッチを検索",
+    .scenesTitle: "シーン",
+    .scenePresentation: "プレゼン",
+    .sceneFocus: "集中",
+    .sceneTidy: "整理",
+    .sceneAllOff: "全てオフ",
+    .noMatches: "一致するスイッチがありません",
+    .sceneApplied: "シーンを適用しました",
 ]
 
 // MARK: - 한국어
@@ -680,4 +720,13 @@ private let ko: [L.Key: String] = [
 
     .widgetSwitchTitle: "빠른 스위치",
     .widgetEmpty: "글래스 덱을 열어 설정",
+
+    .searchPlaceholder: "스위치 검색",
+    .scenesTitle: "장면",
+    .scenePresentation: "발표",
+    .sceneFocus: "집중",
+    .sceneTidy: "정리",
+    .sceneAllOff: "모두 끔",
+    .noMatches: "일치하는 스위치가 없습니다",
+    .sceneApplied: "장면을 적용했습니다",
 ]

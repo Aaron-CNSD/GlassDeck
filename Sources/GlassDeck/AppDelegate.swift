@@ -171,6 +171,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
+        // Scenes submenu — the whole point is flipping several switches
+        // without opening the panel at all.
+        let scenesItem = NSMenuItem(title: L.t(.scenesTitle), action: nil, keyEquivalent: "")
+        let scenesMenu = NSMenu()
+        for scene in SceneLibrary.all {
+            let item = NSMenuItem(title: scene.title,
+                                  action: #selector(applyScene(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = scene.id
+            if let image = NSImage(systemSymbolName: scene.symbol, accessibilityDescription: scene.title) {
+                item.image = image
+            }
+            scenesMenu.addItem(item)
+        }
+        scenesItem.submenu = scenesMenu
+        menu.addItem(scenesItem)
+
         // Language submenu
         let languageItem = NSMenuItem(title: L.t(.language), action: nil, keyEquivalent: "")
         let languageMenu = NSMenu()
@@ -200,6 +218,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
         statusItem.button?.performClick(nil)
         statusItem.menu = nil // reset so left-click still toggles popover
+    }
+
+    @objc private func applyScene(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String,
+              let scene = SceneLibrary.scene(id: id) else { return }
+        SceneLibrary.apply(scene) { _ in
+            // The panel re-reads every switch when it next appears, so there is
+            // nothing to push into the UI from here.
+        }
     }
 
     @objc private func toggleCompactMode() {
