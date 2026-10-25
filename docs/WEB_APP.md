@@ -39,3 +39,9 @@ Bump the `CACHE` name in `website/app/sw.js` whenever app-shell files change. Th
 ## Optional GitHub Actions
 
 `docs/web-ci.example.yml` contains a workflow example. A repository maintainer can copy it to `.github/workflows/web.yml` to enable checks. It is kept as an example because adding a workflow through GitHub requires separate workflow permissions. Local checks remain available through `npm test`.
+
+## Embedded Mac workspace
+
+From v1.6.0 the macOS app embeds the same workspace using WKWebView. `tools/bundle-workspace.sh` creates classic-script resources to avoid local-file module restrictions. Both the SwiftPM bundle script and Xcode post-build phase package these resources. No loopback server, remote page, private WebKit preferences, or service worker is needed in the native app.
+
+Native export/copy handlers accept only messages from the bundled workspace's main frame, cap payloads at 2 MB, and expose no shell or system-control bridge. File exports require a Save dialog; import uses the system file picker. Remote links open in the default browser. Native and browser storage are separate.

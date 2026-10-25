@@ -18,6 +18,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Application Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let applicationMenu = NSMenu()
+        let applicationItem = NSMenuItem()
+        applicationMenu.addItem(applicationItem)
+        let appMenu = NSMenu()
+        appMenu.addItem(NSMenuItem(title: L.t(.quit), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        applicationItem.submenu = appMenu
+        NSApp.mainMenu = applicationMenu
         setupMenuBarItem()
         setupPopover()
         // Open the control window automatically so the app is visible on launch.
@@ -162,6 +169,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                 action: #selector(openControlWindow),
                                 keyEquivalent: ""))
 
+        let workspaceItem = NSMenuItem(title: WorkspaceLabels.workspace,
+                                       action: #selector(openWorkspace), keyEquivalent: "")
+        workspaceItem.target = self
+        menu.addItem(workspaceItem)
+
         // Compact / full panel switch
         let compactItem = NSMenuItem(title: compactMode ? L.t(.fullMode) : L.t(.compactMode),
                                      action: #selector(toggleCompactMode),
@@ -279,6 +291,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Standalone Control Window
 
+    @objc private func openWorkspace() {
+        openControlWindow()
+        (controlWindow?.contentViewController as? MainDeckViewController)?.openWorkspace()
+    }
+
     @objc private func openControlWindow() {
         if let window = controlWindow {
             window.makeKeyAndOrderFront(nil)
@@ -286,15 +303,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let vc = DeckViewController()
-        vc.preferredContentSize = NSSize(width: 380, height: 720)
+        let vc = MainDeckViewController()
+        vc.preferredContentSize = NSSize(width: 380, height: 780)
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 720),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 780),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
+        window.contentMinSize = NSSize(width: 380, height: 760)
         window.title = L.t(.appName)
         window.isMovableByWindowBackground = true
         window.contentViewController = vc

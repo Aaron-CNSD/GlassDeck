@@ -18,6 +18,10 @@
 
 ---
 
+## New in 1.6.0
+
+The Mac app now includes the offline workspace. Switch between **System controls** and **Workspace** in the main window, or open Workspace from the menu bar's right-click menu. Focus timers, tasks, notes and tools are bundled inside the app and do not need a web server. JSON/TXT exports use macOS Save dialogs and backups can be imported through a file picker. Native and browser data are separate; transfer them using backup export/import. The workspace interface is currently in Simplified Chinese; native system controls retain their existing five languages.
+
 ## Cross platform web app
 
 Glass Deck now includes a buildless PWA in `website/app/` with focus timers, tasks, autosaved notes, backup import/export, unit conversion, text statistics and JSON formatting. It runs in modern browsers on Windows, Linux, macOS, iOS and iPadOS; installation varies by browser. The macOS system controls remain in the native app. Data stays in the current browser and does not sync automatically.
@@ -32,7 +36,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.5.1.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.5.1.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.6.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>

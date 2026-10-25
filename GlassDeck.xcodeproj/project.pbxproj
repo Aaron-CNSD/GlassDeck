@@ -19,7 +19,9 @@
 		62DE7C3C869A8DA0DCAB3AD5 /* GlassDeckWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */; };
 		6D49127A43E7458F7CAB3C33 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A86B0487E31C40506B5B4D /* main.swift */; };
 		6D88A10E8ECE2494A67B5CF0 /* ToggleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356EF9376BC5C1488D301127 /* ToggleRowView.swift */; };
+		6E89F9310D48DE183BC46EB1 /* WorkspaceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */; };
 		732B617DBA5E1AD1E836E557 /* GlassPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E3212F4C5D10AD284A785B /* GlassPanel.swift */; };
+		78D0797BC08D64646B17E958 /* Scenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBD078FC605731DF0BF49E9 /* Scenes.swift */; };
 		7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */; };
 		8D09CCD0A83557FD970B430F /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; };
 		A1929895353FD651BDEF145A /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8532222238B11B5097EB1A7 /* WindowController.swift */; };
@@ -96,6 +98,7 @@
 		43A86B0487E31C40506B5B4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5F04D6AED68DD93507A9982B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		63F1CF7DB03B75A1225D4BEF /* GlassDeckWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassDeckWidget.entitlements; sourceTree = "<group>"; };
+		658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewController.swift; sourceTree = "<group>"; };
 		6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		7E6EA7F5686EC718B878BF95 /* Shared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Shared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		863037DB92A329D08C322982 /* QuickLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLaunch.swift; sourceTree = "<group>"; };
@@ -110,6 +113,7 @@
 		DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniDeckViewController.swift; sourceTree = "<group>"; };
 		E0176EAAA405533628BBF769 /* ToggleLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleLibrary.swift; sourceTree = "<group>"; };
 		E4E3212F4C5D10AD284A785B /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
+		EEBD078FC605731DF0BF49E9 /* Scenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenes.swift; sourceTree = "<group>"; };
 		FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -159,12 +163,14 @@
 				DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */,
 				BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */,
 				863037DB92A329D08C322982 /* QuickLaunch.swift */,
+				EEBD078FC605731DF0BF49E9 /* Scenes.swift */,
 				98031268E60D243CD3CDC35D /* SystemController.swift */,
 				9F9BE0DE7459648809A298FD /* SystemMonitor.swift */,
 				3C8D0A7B57916D3E1024663D /* Toggle.swift */,
 				E0176EAAA405533628BBF769 /* ToggleLibrary.swift */,
 				356EF9376BC5C1488D301127 /* ToggleRowView.swift */,
 				C8532222238B11B5097EB1A7 /* WindowController.swift */,
+				658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */,
 			);
 			name = GlassDeck;
 			path = Sources/GlassDeck;
@@ -230,6 +236,7 @@
 				6E074897C7D37EB99DCBCA5E /* Frameworks */,
 				392D1EEACE4B5ADF3A15690B /* Embed Foundation Extensions */,
 				3EDE939B84578CE7D44B4BA1 /* Embed Frameworks */,
+				CE2123E5370766B2811807E5 /* Bundle Offline Workspace */,
 				E5A83BA3D27380950D8A963C /* Copy App Icon */,
 			);
 			buildRules = (
@@ -295,6 +302,24 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		CE2123E5370766B2811807E5 /* Bundle Offline Workspace */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle Offline Workspace";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "bash \"$SRCROOT/tools/bundle-workspace.sh\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/Workspace\"\n";
+		};
 		E5A83BA3D27380950D8A963C /* Copy App Icon */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -348,12 +373,14 @@
 				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,
 				56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */,
 				E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */,
+				78D0797BC08D64646B17E958 /* Scenes.swift in Sources */,
 				41C7E3D514BA02A376516B4A /* SystemController.swift in Sources */,
 				47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */,
 				D0D7098A2EB38BDDEF3CC0FA /* Toggle.swift in Sources */,
 				431E874212BDC01FD640F872 /* ToggleLibrary.swift in Sources */,
 				6D88A10E8ECE2494A67B5CF0 /* ToggleRowView.swift in Sources */,
 				A1929895353FD651BDEF145A /* WindowController.swift in Sources */,
+				6E89F9310D48DE183BC46EB1 /* WorkspaceViewController.swift in Sources */,
 				6D49127A43E7458F7CAB3C33 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
