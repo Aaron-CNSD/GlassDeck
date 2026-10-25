@@ -1,0 +1,16 @@
+name: Web app checks
+on:
+  push:
+    paths: ['website/**', 'deploy/**', 'tests/**', 'package.json', '.github/workflows/web.yml']
+  pull_request:
+    paths: ['website/**', 'deploy/**', 'tests/**', 'package.json', '.github/workflows/web.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: node --check website/app/app.mjs && node --check website/app/sw.js && node --check deploy/worker.js

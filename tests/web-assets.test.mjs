@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile,access} from 'node:fs/promises';
+const root=new URL('../website/app/',import.meta.url);
+test('manifest launch and icons remain inside the app scope',async()=>{const m=JSON.parse(await readFile(new URL('manifest.webmanifest',root),'utf8'));assert.equal(m.start_url,'/app/');assert.equal(m.scope,'/app/');for(const i of m.icons)await access(new URL(i.src,root));assert(m.icons.some(i=>i.sizes==='512x512'));});
+test('offline cache lists every local dependency',async()=>{const html=await readFile(new URL('index.html',root),'utf8');const sw=await readFile(new URL('sw.js',root),'utf8');for(const [,path]of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)){await access(new URL(path,root));assert(sw.includes(`'${path}'`),path);}assert(!html.includes('https://fonts.'));});

@@ -18,6 +18,12 @@
 
 ---
 
+## Cross platform web app
+
+Glass Deck now includes a buildless PWA in `website/app/` with focus timers, tasks, autosaved notes, backup import/export, unit conversion, text statistics and JSON formatting. It runs in modern browsers on Windows, Linux, macOS, iOS and iPadOS; installation varies by browser. The macOS system controls remain in the native app. Data stays in the current browser and does not sync automatically.
+
+Run `npm test` and `python3 -m http.server 4173 --directory website`, then open `http://localhost:4173/app/`. See [web app documentation](docs/WEB_APP.md) for offline behavior, installation, limitations and deployment.
+
 ## Install
 
 ```bash
