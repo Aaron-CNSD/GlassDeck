@@ -1,5 +1,20 @@
 import {STORAGE_KEY, emptyState, validateState, remaining, settleTimer, convert} from './model.mjs';
 const $ = id => document.getElementById(id);
+const nativeHost = window.glassDeckNative === true && window.webkit?.messageHandlers?.glassDeckExport;
+if (nativeHost) {
+  document.querySelectorAll('#install, #install-guide, #wake').forEach(el => el.hidden = true);
+  $('offline-ready').textContent = '工作台已随 Mac 应用打包，无需联网。';
+  document.querySelector('.workspace span').textContent = 'MAC';
+  document.querySelector('.sidebar-bottom p').textContent = '保存在此 Mac 应用中，与浏览器版分别存储。可通过备份导入导出。';
+  document.querySelector('.sidebar-bottom .local-dot').textContent = '数据保存在此 Mac 应用';
+  $('quick-save').textContent = $('note-save').textContent = '自动保存到此 Mac 应用';
+  document.querySelector('.backup-card .muted').textContent = '导出待办、笔记与计时记录，再导入其他设备。Mac 应用与浏览器分别存储，不会自动同步；删除应用数据前请先导出。';
+  document.querySelector('.micro').textContent = '计时按实际时间恢复；应用退出或设备休眠时不保证响铃。';
+}
+function newTaskID() {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
+}
 let state = emptyState();
 let storageFailed = false;
 function announce(message) { $('status').textContent = message; }
@@ -52,14 +67,14 @@ function taskCounts() {
 $('task-form').addEventListener('submit', event => {
   event.preventDefault(); const text=$('task-input').value.trim(); if (!text) return;
   if (state.tasks.length>=1000) { announce('待办已达 1000 项，请先清理已完成事项。'); return; }
-  state.tasks.push({id:crypto.randomUUID(),text,done:false}); save(); renderTasks(); $('task-input').value=''; $('task-input').focus();
+  state.tasks.push({id:newTaskID(),text,done:false}); save(); renderTasks(); $('task-input').value=''; $('task-input').focus();
 });
 $('clear-done').addEventListener('click', () => {if (!confirm('清除所有已完成待办？')) return; state.tasks=state.tasks.filter(t=>!t.done);save();renderTasks();});
 function notesChanged(source) {
   state.notes=source.value;
   const other=source.id==='quick-note' ? $('note-editor') : $('quick-note'); other.value=state.notes;
   $('note-count').textContent=`${Array.from(state.notes).length.toLocaleString()} 字符`;
-  const ok=save(); const message=ok?'已保存到此浏览器':'尚未保存，请导出备份';
+  const ok=save(); const message=ok?(nativeHost?'已保存到此 Mac 应用':'已保存到此浏览器'):'尚未保存，请导出备份';
   $('quick-save').textContent=message; $('note-save').textContent=message;
 }
 $('quick-note').addEventListener('input',()=>notesChanged($('quick-note')));
@@ -113,8 +128,8 @@ $('category').addEventListener('change',unitOptions);['convert-value','from-unit
 function textCount(){const text=$('tool-text').value;$('text-count').textContent=`${Array.from(text).length} 字符 · ${text.trim()?text.trim().split(/\s+/u).length:0} 个空格分隔词`;$('json-result').textContent='';}
 $('tool-text').addEventListener('input',textCount);
 $('format-json').addEventListener('click',()=>{try{$('tool-text').value=JSON.stringify(JSON.parse($('tool-text').value),null,2);textCount();$('json-result').textContent='格式已整理。';}catch{$('json-result').textContent='JSON 格式无效，请检查引号、逗号和括号。';}});
-$('copy-text').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('tool-text').value);$('json-result').textContent='已复制。';}catch{$('tool-text').select();$('json-result').textContent='无法自动复制，请使用系统的复制操作。';}});
-function download(text,type,name){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+$('copy-text').addEventListener('click',async()=>{try{if(nativeHost)nativeHost.postMessage({action:'copy',text:$('tool-text').value});else await navigator.clipboard.writeText($('tool-text').value);$('json-result').textContent='已复制。';}catch{$('tool-text').select();$('json-result').textContent='无法自动复制，请使用系统的复制操作。';}});
+function download(text,type,name){if(nativeHost){nativeHost.postMessage({action:'save',text,name});return;}const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 $('download-note').addEventListener('click',()=>download(state.notes,'text/plain;charset=utf-8','glassdeck-notes.txt'));
 $('export').addEventListener('click',()=>{updateTimer();download(JSON.stringify(state,null,2),'application/json',`glassdeck-backup-${new Date().toISOString().slice(0,10)}.json`);});
 $('import').addEventListener('click',()=>$('import-file').click());
@@ -131,8 +146,8 @@ $('install').addEventListener('click',install);$('install-guide').addEventListen
 window.addEventListener('appinstalled',()=>{installPrompt=null;announce('Glass Deck 已安装。');});
 function network(){ $('network').textContent=navigator.onLine?'在线':'离线模式'; }
 window.addEventListener('online',network);window.addEventListener('offline',network);network();
-if('serviceWorker'in navigator){
+if(!nativeHost && 'serviceWorker'in navigator){
   navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-ready').textContent='离线资源已就绪。此页面可在断网后重新打开。';}).catch(()=>{$('offline-ready').textContent='离线资源尚未就绪；请保持联网使用并稍后重试。';});
-}else $('offline-ready').textContent='此浏览器不支持离线资源，请联网使用。';
+}else if(!nativeHost) $('offline-ready').textContent='此浏览器不支持离线资源，请联网使用。';
 function clock(){const now=new Date();$('clock').textContent=now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});$('today').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});}
 renderTasks();renderNotes();unitOptions();updateTimer();clock();setInterval(()=>{updateTimer();clock();},1000);

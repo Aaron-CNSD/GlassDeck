@@ -36,7 +36,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.5.1</string>
+    <string>1.6.0</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
@@ -47,6 +47,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Glass Deck controls Finder and System Events for requested system switches.</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>
@@ -68,6 +70,8 @@ if [ -f "Resources/AppIcon.icns" ]; then
 elif [ -f "AppIcon.icns" ]; then
     cp "AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 fi
+
+bash tools/bundle-workspace.sh "$APP/Contents/Resources/Workspace"
 
 echo "==> Done: $APP"
 echo "    Run with:  open $APP"

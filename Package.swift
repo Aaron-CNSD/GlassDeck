@@ -19,11 +19,13 @@ let package = Package(
             name: "GlassDeck",
             dependencies: ["Shared"],
             path: "Sources/GlassDeck",
+            exclude: ["Info.plist"],
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("CoreServices"),
-                .linkedFramework("Vision")
+                .linkedFramework("Vision"),
+                .linkedFramework("WebKit")
             ]
         ),
         // NOTE: The Widget extension (Widget/) is built via the Xcode project
