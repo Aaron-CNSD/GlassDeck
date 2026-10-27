@@ -106,7 +106,8 @@ enum L {
              autoHideDock, hideMenuBar, naturalScrolling, showStatusBar, showAllExtensions
 
         // Monitor
-        case cpu, memory, network, upload, download
+        case cpu, memory, network, upload, download,
+             topProcesses, quitProcess, processListUnavailable
 
         // Windows
         case windowTitle, bringToFront, forceQuit, refresh
@@ -179,6 +180,10 @@ private let en: [L.Key: String] = [
     .network: "Network",
     .upload: "Upload",
     .download: "Download",
+
+    .topProcesses: "Top Processes",
+    .quitProcess: "Quit",
+    .processListUnavailable: "Process list unavailable",
 
     .windowTitle: "Windows",
     .bringToFront: "Bring to Front",
@@ -311,6 +316,10 @@ private let zhHans: [L.Key: String] = [
     .upload: "上传",
     .download: "下载",
 
+    .topProcesses: "占用最高",
+    .quitProcess: "退出",
+    .processListUnavailable: "暂时读不到进程列表",
+
     .windowTitle: "窗口",
     .bringToFront: "置于最前",
     .forceQuit: "强制退出",
@@ -441,6 +450,10 @@ private let zhHant: [L.Key: String] = [
     .network: "網路",
     .upload: "上傳",
     .download: "下載",
+
+    .topProcesses: "佔用最高",
+    .quitProcess: "結束",
+    .processListUnavailable: "暫時讀不到進程列表",
 
     .windowTitle: "視窗",
     .bringToFront: "置於最前",
@@ -573,6 +586,10 @@ private let ja: [L.Key: String] = [
     .upload: "アップロード",
     .download: "ダウンロード",
 
+    .topProcesses: "上位プロセス",
+    .quitProcess: "終了",
+    .processListUnavailable: "プロセス一覧を取得できません",
+
     .windowTitle: "ウィンドウ",
     .bringToFront: "前面に移動",
     .forceQuit: "強制終了",
@@ -703,6 +720,10 @@ private let ko: [L.Key: String] = [
     .network: "네트워크",
     .upload: "업로드",
     .download: "다운로드",
+
+    .topProcesses: "사용량 상위",
+    .quitProcess: "종료",
+    .processListUnavailable: "프로세스 목록을 읽을 수 없습니다",
 
     .windowTitle: "윈도우",
     .bringToFront: "앞으로 가져오기",

@@ -206,6 +206,7 @@ final class DeckViewController: NSViewController {
             view.animator().alphaValue = 1
         }
         if tab == .clipboard { rebuildClipboard() }
+        if tab == .monitor { refreshProcesses() }
     }
 
     // MARK: - Tab: Toggles
@@ -396,11 +397,19 @@ final class DeckViewController: NSViewController {
     private var cpuLabel: NSTextField!
     private var memLabel: NSTextField!
     private var netLabel: NSTextField!
+    private var cpuSpark: SparklineView!
+    private var memSpark: SparklineView!
+    private var netSpark: SparklineView!
+    private var processList: NSStackView!
+    private var monitorTick = 0
+    /// Decaying peak for the network curve, so one big download does not
+    /// flatten the rest of the minute into a straight line at zero.
+    private var netPeak: Double = 1_000_000
 
     private func buildMonitorView() -> NSView {
         let stack = NSStackView()
         stack.orientation = .vertical
-        stack.spacing = 10
+        stack.spacing = 8
         stack.alignment = .leading
         stack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -408,18 +417,48 @@ final class DeckViewController: NSViewController {
         memLabel = metricLabel(title: L.t(.memory))
         netLabel = metricLabel(title: L.t(.network))
 
-        let cpuRow = makeMetricRow(symbol: "cpu", title: L.t(.cpu), valueLabel: cpuLabel)
-        let memRow = makeMetricRow(symbol: "memorychip", title: L.t(.memory), valueLabel: memLabel)
-        let netRow = makeMetricRow(symbol: "arrow.up.arrow.down", title: L.t(.network), valueLabel: netLabel)
+        let cpuCard = makeMetricCard(symbol: "cpu", title: L.t(.cpu),
+                                     valueLabel: cpuLabel, tint: .systemBlue)
+        cpuSpark = cpuCard.spark
+        let memCard = makeMetricCard(symbol: "memorychip", title: L.t(.memory),
+                                     valueLabel: memLabel, tint: .systemPurple)
+        memSpark = memCard.spark
+        let netCard = makeMetricCard(symbol: "arrow.up.arrow.down", title: L.t(.network),
+                                     valueLabel: netLabel, tint: .systemTeal)
+        netSpark = netCard.spark
 
-        [cpuRow, memRow, netRow].forEach {
-            let capsule = wrapInCapsule($0)
-            stack.addArrangedSubview(capsule)
-            capsule.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        for card in [cpuCard.view, memCard.view, netCard.view] {
+            stack.addArrangedSubview(card)
+            card.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
 
+        // A number without a culprit is trivia: name the processes behind it.
+        let processHeader = NSTextField(labelWithString: L.t(.topProcesses))
+        processHeader.font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        processHeader.textColor = .secondaryLabelColor
+        stack.addArrangedSubview(processHeader)
+
+        let processCard = NSView()
+        processCard.translatesAutoresizingMaskIntoConstraints = false
+        processList = NSStackView()
+        processList.orientation = .vertical
+        processList.spacing = 6
+        processList.alignment = .leading
+        processList.translatesAutoresizingMaskIntoConstraints = false
+        processCard.addSubview(processList)
+        NSLayoutConstraint.activate([
+            processList.leadingAnchor.constraint(equalTo: processCard.leadingAnchor),
+            processList.trailingAnchor.constraint(equalTo: processCard.trailingAnchor),
+            processList.topAnchor.constraint(equalTo: processCard.topAnchor),
+            processList.bottomAnchor.constraint(equalTo: processCard.bottomAnchor),
+        ])
+        stack.addArrangedSubview(processCard)
+        processCard.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+
         startMonitorSampling()
-        return stack
+        // Scrolls once the process list grows past the panel; without this the
+        // stack squeezes and the last row gets clipped mid-pixel.
+        return makeScrollableList(stack)
     }
 
     private func metricLabel(title: String) -> NSTextField {
@@ -430,60 +469,162 @@ final class DeckViewController: NSViewController {
         return label
     }
 
-    private func makeMetricRow(symbol: String, title: String, valueLabel: NSTextField) -> NSView {
-        let row = NSStackView()
-        row.orientation = .horizontal
-        row.alignment = .centerY
-        row.spacing = 10
+    /// A metric capsule: icon + title + live value on top, a 34 pt history
+    /// curve underneath. The sparkline owns its own ring buffer; this only
+    /// wires the layout.
+    private func makeMetricCard(symbol: String, title: String,
+                                valueLabel: NSTextField,
+                                tint: NSColor) -> (view: NSView, spark: SparklineView) {
+        let header = NSStackView()
+        header.orientation = .horizontal
+        header.alignment = .centerY
+        header.spacing = 8
+        header.translatesAutoresizingMaskIntoConstraints = false
 
         let icon = NSImageView()
-        if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: title) {
-            icon.image = img
-            icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-            icon.contentTintColor = .controlAccentColor
+        if let image = NSImage(systemSymbolName: symbol, accessibilityDescription: title) {
+            icon.image = image
+            icon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+            icon.contentTintColor = tint
         }
         icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.widthAnchor.constraint(equalToConstant: 22).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        icon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 20).isActive = true
 
         let titleLabel = NSTextField(labelWithString: title)
-        titleLabel.font = NSFont.systemFont(ofSize: 14, weight: .medium)
+        titleLabel.font = NSFont.systemFont(ofSize: 13.5, weight: .medium)
         titleLabel.textColor = .labelColor
         titleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        row.addArrangedSubview(icon)
-        row.addArrangedSubview(titleLabel)
-        row.addArrangedSubview(NSView())
-        row.addArrangedSubview(valueLabel)
+        header.addArrangedSubview(icon)
+        header.addArrangedSubview(titleLabel)
+        header.addArrangedSubview(NSView())
+        header.addArrangedSubview(valueLabel)
 
-        let container = NSView()
-        container.addSubview(row)
-        row.translatesAutoresizingMaskIntoConstraints = false
+        let spark = SparklineView()
+        spark.accentColor = tint
+        spark.heightAnchor.constraint(equalToConstant: 34).isActive = true
+
+        let column = NSStackView(views: [header, spark])
+        column.orientation = .vertical
+        column.alignment = .leading
+        column.spacing = 6
+        column.translatesAutoresizingMaskIntoConstraints = false
+
+        let body = NSView()
+        body.addSubview(column)
         NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
-            row.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
-            row.topAnchor.constraint(equalTo: container.topAnchor, constant: 12),
-            row.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+            column.leadingAnchor.constraint(equalTo: body.leadingAnchor, constant: 14),
+            column.trailingAnchor.constraint(equalTo: body.trailingAnchor, constant: -14),
+            column.topAnchor.constraint(equalTo: body.topAnchor, constant: 11),
+            column.bottomAnchor.constraint(equalTo: body.bottomAnchor, constant: -11),
+            header.widthAnchor.constraint(equalTo: column.widthAnchor),
+            spark.widthAnchor.constraint(equalTo: column.widthAnchor),
         ])
-        return container
+        return (wrapInCapsule(body), spark)
     }
 
     private func startMonitorSampling() {
         monitorTimer?.invalidate()
+        monitorTick = 0
         monitorTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             let cpu = SystemMonitor.cpuUsage
             let used = SystemMonitor.usedMemory
             let total = SystemMonitor.totalMemory
             let net = SystemMonitor.networkThroughput()
+            let throughput = net.rx + net.tx
+            self.netPeak = max(throughput, self.netPeak * 0.97)
 
             DispatchQueue.main.async {
                 self.cpuLabel?.stringValue = String(format: "%.0f%%", cpu * 100)
                 self.memLabel?.stringValue = "\(ByteFormatter.string(used)) / \(ByteFormatter.string(total))"
                 self.netLabel?.stringValue = "↓ \(ByteFormatter.rate(net.rx))  ↑ \(ByteFormatter.rate(net.tx))"
+                self.cpuSpark?.push(cpu)
+                self.memSpark?.push(total > 0 ? Double(used) / Double(total) : 0)
+                self.netSpark?.push(self.netPeak > 0 ? throughput / self.netPeak : 0)
+            }
+
+            self.monitorTick += 1
+            // `ps` every three seconds: quick enough to catch a runaway build,
+            // slow enough to stay out of the way of one.
+            if self.monitorTick % 3 == 1, self.currentTab == .monitor {
+                self.refreshProcesses()
             }
         }
         monitorTimer?.tolerance = 0.2
+    }
+
+    private func refreshProcesses() {
+        ProcessMonitor.sample(limit: 4) { [weak self] samples in
+            self?.renderProcesses(samples)
+        }
+    }
+
+    private func renderProcesses(_ samples: [ProcessSample]) {
+        guard let processList = processList else { return }
+        processList.arrangedSubviews.forEach {
+            processList.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+
+        guard !samples.isEmpty else {
+            let empty = NSTextField(labelWithString: L.t(.processListUnavailable))
+            empty.font = NSFont.systemFont(ofSize: 12, weight: .regular)
+            empty.textColor = .tertiaryLabelColor
+            processList.addArrangedSubview(empty)
+            return
+        }
+
+        for sample in samples {
+            let capsule = wrapInCapsule(makeProcessRow(sample))
+            processList.addArrangedSubview(capsule)
+            capsule.widthAnchor.constraint(equalTo: processList.widthAnchor).isActive = true
+        }
+    }
+
+    private func makeProcessRow(_ sample: ProcessSample) -> NSView {
+        let name = NSTextField(labelWithString: sample.name)
+        name.font = NSFont.systemFont(ofSize: 12.5, weight: .regular)
+        name.textColor = .labelColor
+        name.lineBreakMode = .byTruncatingMiddle
+        name.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        name.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let cpu = NSTextField(labelWithString: String(format: "%.0f%%", sample.cpu))
+        cpu.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+        cpu.textColor = sample.cpu >= 50 ? .systemOrange : .secondaryLabelColor
+        cpu.alignment = .right
+        cpu.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
+        let memory = NSTextField(labelWithString: ByteFormatter.string(sample.memory))
+        memory.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        memory.textColor = .tertiaryLabelColor
+        memory.alignment = .right
+        memory.widthAnchor.constraint(equalToConstant: 62).isActive = true
+
+        let quit = iconButton(symbol: "xmark.circle.fill", tint: .systemRed,
+                              tooltip: L.t(.quitProcess)) { [weak self] in
+            guard let self = self else { return }
+            if ProcessMonitor.quit(pid: sample.pid) {
+                self.showStatus("\(L.t(.quitProcess)): \(sample.name)", isError: false)
+                // Give it a moment to actually die before re-reading ps.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                    self?.refreshProcesses()
+                }
+            } else {
+                self.showStatus("\(sample.name) — \(L.t(.failed))", isError: true)
+            }
+        }
+
+        let row = NSStackView(views: [name, cpu, memory, quit])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 8
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.edgeInsets = NSEdgeInsets(top: 6, left: 12, bottom: 6, right: 8)
+        row.toolTip = "PID \(sample.pid)"
+        return row
     }
 
     // MARK: - Tab: Windows

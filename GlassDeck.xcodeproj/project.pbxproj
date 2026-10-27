@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		093994E1E8E6D45F89EC23BC /* SparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDD82E927A17729DBE85246 /* SparklineView.swift */; };
 		15335ECDB5D2B86B505CCB08 /* DeckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */; };
 		1EBEE50B5E8ABB6D888DA16E /* DiskCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD4830DD0E557965E8C7380 /* DiskCleaner.swift */; };
 		20B552E7F47DA2967328DEB7 /* Shared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -15,6 +16,7 @@
 		431E874212BDC01FD640F872 /* ToggleLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0176EAAA405533628BBF769 /* ToggleLibrary.swift */; };
 		47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9BE0DE7459648809A298FD /* SystemMonitor.swift */; };
 		4AF36FC1C125196935B14D83 /* GlassDeckWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4082B004A45FD219D40CFA53 /* GlassDeckWidget.swift */; };
+		5648E3A72E64553411D797DC /* ProcessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1299AD023E2FF9898A4C6C /* ProcessMonitor.swift */; };
 		56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */; };
 		62DE7C3C869A8DA0DCAB3AD5 /* GlassDeckWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */; };
 		6D49127A43E7458F7CAB3C33 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A86B0487E31C40506B5B4D /* main.swift */; };
@@ -93,6 +95,7 @@
 		2651AF157E284F3501687D95 /* GlassDeck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F9BD93DE1021DA5ED8CF9C7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		356EF9376BC5C1488D301127 /* ToggleRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleRowView.swift; sourceTree = "<group>"; };
+		3A1299AD023E2FF9898A4C6C /* ProcessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMonitor.swift; sourceTree = "<group>"; };
 		3A8238F1828BD47F9D479244 /* WidgetSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSwitch.swift; sourceTree = "<group>"; };
 		3C8D0A7B57916D3E1024663D /* Toggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toggle.swift; sourceTree = "<group>"; };
 		4082B004A45FD219D40CFA53 /* GlassDeckWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDeckWidget.swift; sourceTree = "<group>"; };
@@ -108,6 +111,7 @@
 		98031268E60D243CD3CDC35D /* SystemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemController.swift; sourceTree = "<group>"; };
 		9F9BE0DE7459648809A298FD /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
 		AAB94AC23EEF66527489CE13 /* GlassDeckWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GlassDeckWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACDD82E927A17729DBE85246 /* SparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineView.swift; sourceTree = "<group>"; };
 		BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDeckWidgetView.swift; sourceTree = "<group>"; };
 		BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCenter.swift; sourceTree = "<group>"; };
 		BF7013321C2A1C75539503BD /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
@@ -165,8 +169,10 @@
 				43A86B0487E31C40506B5B4D /* main.swift */,
 				DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */,
 				BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */,
+				3A1299AD023E2FF9898A4C6C /* ProcessMonitor.swift */,
 				863037DB92A329D08C322982 /* QuickLaunch.swift */,
 				EEBD078FC605731DF0BF49E9 /* Scenes.swift */,
+				ACDD82E927A17729DBE85246 /* SparklineView.swift */,
 				98031268E60D243CD3CDC35D /* SystemController.swift */,
 				9F9BE0DE7459648809A298FD /* SystemMonitor.swift */,
 				3C8D0A7B57916D3E1024663D /* Toggle.swift */,
@@ -376,8 +382,10 @@
 				B3351587EB468E5632B4C257 /* Localization.swift in Sources */,
 				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,
 				56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */,
+				5648E3A72E64553411D797DC /* ProcessMonitor.swift in Sources */,
 				E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */,
 				78D0797BC08D64646B17E958 /* Scenes.swift in Sources */,
+				093994E1E8E6D45F89EC23BC /* SparklineView.swift in Sources */,
 				41C7E3D514BA02A376516B4A /* SystemController.swift in Sources */,
 				47426FCBC1CF0D49E46DB4B1 /* SystemMonitor.swift in Sources */,
 				D0D7098A2EB38BDDEF3CC0FA /* Toggle.swift in Sources */,

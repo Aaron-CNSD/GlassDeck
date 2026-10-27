@@ -4,7 +4,7 @@
 
 # Glass Deck
 
-**Eleven system switches, a clipboard shelf, live monitoring and cache cleanup — in one glass panel in your menu bar.**
+**Eleven system switches, a clipboard shelf, live graphs with a process list and cache cleanup — in one glass panel in your menu bar.**
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-111?logo=apple&logoColor=white)](https://aarongame.com)
 [![Release](https://img.shields.io/github/v/release/Aaron-CNSD/GlassDeck?color=5b8cff&label=release)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
@@ -17,6 +17,12 @@
 </div>
 
 ---
+
+## New in 1.6.2
+
+**Monitor** now shows the last minute instead of a single number. CPU, memory and network each get a 60-sample history curve, drawn at 1 Hz with the network curve auto-scaled against a decaying peak so one big download does not flatten the rest of the graph. Numbers without a culprit are trivia, so the tab also lists the **top four processes by CPU** with their resident memory — the × button sends a normal `terminate` to GUI apps (they get to save) and `SIGTERM` to everything else, then re-reads the list. Sampling uses `ps` on a utility queue, every three seconds, and only while the tab is open.
+
+The whole tab scrolls now, so a long process list can never squeeze the cards or clip the last row.
 
 ## New in 1.6.1
 
@@ -42,7 +48,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.6.1.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.1.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.6.2.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.2.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>
