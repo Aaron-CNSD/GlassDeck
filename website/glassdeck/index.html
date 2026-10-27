@@ -167,6 +167,16 @@
     50% { background-position: 100% 50%; }
   }
   .subtitle { font-size: 20px; color: var(--muted); max-width: 640px; margin: 0 auto 40px; }
+  .release-chip {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    flex-wrap: wrap; margin: 0 auto 34px; font-size: 14px; color: var(--muted);
+  }
+  .release-chip .chip {
+    display: inline-flex; align-items: center; padding: 5px 13px; border-radius: 999px;
+    background: rgba(91,140,255,0.14); border: 1px solid rgba(91,140,255,0.4);
+    color: #cfe0ff; font-weight: 600; text-decoration: none; transition: all .25s;
+  }
+  .release-chip .chip:hover { background: rgba(91,140,255,0.26); border-color: rgba(91,140,255,0.65); }
   .cta-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
   /* Hero glass mockup */
@@ -302,6 +312,11 @@
     <a class="btn btn-primary" href="/app/">Open web app ↗</a>
     <a class="btn btn-ghost" href="https://github.com/Aaron-CNSD/GlassDeck/releases">Download for macOS</a>
     <a class="btn btn-ghost" href="https://github.com/Aaron-CNSD/GlassDeck">View on GitHub ↗</a>
+  </div>
+
+  <div class="release-chip reveal">
+    <a class="chip" href="https://github.com/Aaron-CNSD/GlassDeck/releases/tag/v1.6.2">v1.6.2 ↗</a>
+    <span>Monitor keeps the last minute — CPU, memory and network curves, plus the top four processes.</span>
   </div>
 
   <div class="hero-mock reveal">
