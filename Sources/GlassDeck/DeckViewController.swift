@@ -6,7 +6,7 @@ import ObjectiveC
 final class DeckViewController: NSViewController {
 
     private enum Tab: Int, CaseIterable {
-        case toggles, monitor, windows, cleaner, tools, launch
+        case toggles, monitor, windows, cleaner, tools, clipboard, launch
         var title: String {
             switch self {
             case .toggles: return L.t(.tabSwitches)
@@ -14,6 +14,7 @@ final class DeckViewController: NSViewController {
             case .windows: return L.t(.tabWindows)
             case .cleaner: return L.t(.tabCleaner)
             case .tools: return L.t(.tabTools)
+            case .clipboard: return L.t(.tabClipboard)
             case .launch: return L.t(.tabLaunch)
             }
         }
@@ -24,6 +25,7 @@ final class DeckViewController: NSViewController {
             case .windows: return "macwindow"
             case .cleaner: return "trash"
             case .tools: return "wrench.and.screwdriver"
+            case .clipboard: return "doc.on.clipboard"
             case .launch: return "bolt"
             }
         }
@@ -71,14 +73,24 @@ final class DeckViewController: NSViewController {
         header.addArrangedSubview(title)
         header.addArrangedSubview(subtitle)
 
-        // Segmented control for tabs
-        segmented = NSSegmentedControl(labels: Tab.allCases.map { $0.title },
+        // Segmented control for tabs. Seven labels no longer fit in a 380 pt
+        // panel, so the bar is icon-only and every segment carries a tooltip.
+        let icons: [NSImage] = Tab.allCases.map { tab in
+            NSImage(systemSymbolName: tab.symbol, accessibilityDescription: tab.title)
+                ?? NSImage(size: NSSize(width: 14, height: 14))
+        }
+        segmented = NSSegmentedControl(images: icons,
                                        trackingMode: .selectOne,
                                        target: self,
                                        action: #selector(tabChanged(_:)))
         segmented.selectedSegment = 0
         segmented.translatesAutoresizingMaskIntoConstraints = false
         segmented.controlSize = .regular
+        segmented.segmentStyle = .rounded
+        for (index, tab) in Tab.allCases.enumerated() {
+            segmented.setToolTip(tab.title, forSegment: index)
+        }
+        segmented.setAccessibilityLabel(L.t(.appName))
 
         // Content container
         contentContainer = NSView()
@@ -95,6 +107,7 @@ final class DeckViewController: NSViewController {
         contentViews[.windows] = buildWindowsView()
         contentViews[.cleaner] = buildCleanerView()
         contentViews[.tools] = buildToolsView()
+        contentViews[.clipboard] = buildClipboardView()
         contentViews[.launch] = buildLaunchView()
 
         // Assemble
@@ -126,6 +139,11 @@ final class DeckViewController: NSViewController {
                                               selector: #selector(handleCommandSucceeded(_:)),
                                               name: SystemController.commandSucceeded,
                                               object: nil)
+        // Keeps the shelf live while the tab is open.
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(clipboardChanged),
+                                              name: ClipboardStore.changed,
+                                              object: nil)
     }
 
     // MARK: - Status reporting
@@ -156,6 +174,17 @@ final class DeckViewController: NSViewController {
         showTab(tab)
     }
 
+    #if DEBUG
+    /// Debug hook for the offscreen layout harness: selects a tab by index
+    /// without impersonating a click. Compiled out of release builds.
+    func selectTabForLayoutCheck(index: Int) {
+        guard let tab = Tab(rawValue: index) else { return }
+        segmented.selectedSegment = index
+        showTab(tab)
+        view.layoutSubtreeIfNeeded()
+    }
+    #endif
+
     private func showTab(_ tab: Tab) {
         currentTab = tab
         contentContainer.subviews.forEach { $0.removeFromSuperview() }
@@ -176,6 +205,7 @@ final class DeckViewController: NSViewController {
             ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
             view.animator().alphaValue = 1
         }
+        if tab == .clipboard { rebuildClipboard() }
     }
 
     // MARK: - Tab: Toggles
@@ -910,6 +940,195 @@ final class DeckViewController: NSViewController {
 
         let capsule = wrapInCapsule(row)
         return capsule
+    }
+
+    // MARK: - Tab: Clipboard
+
+    private var clipboardList: NSStackView!
+    private var clipboardScroll: NSScrollView!
+    private var clipboardSwitch: NSSwitch!
+    private var clipboardCountLabel: NSTextField!
+
+    private func buildClipboardView() -> NSView {
+        // Recording switch: the one control that decides whether the shelf
+        // exists at all, so it sits at the top where it can be found.
+        clipboardSwitch = NSSwitch()
+        clipboardSwitch.state = ClipboardStore.shared.isEnabled ? .on : .off
+        clipboardSwitch.target = self
+        clipboardSwitch.action = #selector(clipboardSwitchFlipped(_:))
+        clipboardSwitch.controlSize = .small
+
+        let switchLabel = NSTextField(labelWithString: L.t(.clipboardCapture))
+        switchLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        switchLabel.textColor = .labelColor
+
+        clipboardCountLabel = NSTextField(labelWithString: "")
+        clipboardCountLabel.font = NSFont.systemFont(ofSize: 11)
+        clipboardCountLabel.textColor = .secondaryLabelColor
+        clipboardCountLabel.alignment = .right
+        clipboardCountLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let clearButton = makeActionButton(title: L.t(.clipboardClear), symbol: "trash") { [weak self] in
+            ClipboardStore.shared.clear()
+            self?.showStatus(L.t(.clipboardCleared), isError: false)
+        }
+        clearButton.controlSize = .small
+        clearButton.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+
+        let header = NSStackView(views: [switchLabel, clipboardSwitch, clipboardCountLabel, clearButton])
+        header.orientation = .horizontal
+        header.alignment = .centerY
+        header.spacing = 8
+        header.translatesAutoresizingMaskIntoConstraints = false
+
+        clipboardList = NSStackView()
+        clipboardList.orientation = .vertical
+        clipboardList.spacing = 6
+        clipboardList.alignment = .leading
+        clipboardList.translatesAutoresizingMaskIntoConstraints = false
+
+        clipboardScroll = makeScrollableList(clipboardList)
+        let scroll = clipboardScroll!
+
+        let hint = NSTextField(labelWithString: L.t(.clipboardHint))
+        hint.font = NSFont.systemFont(ofSize: 10)
+        hint.textColor = .tertiaryLabelColor
+        hint.maximumNumberOfLines = 3
+        hint.translatesAutoresizingMaskIntoConstraints = false
+
+        let stack = NSStackView(views: [header, scroll, hint])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        for child in [header, scroll, hint] as [NSView] {
+            child.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        }
+        // Let the list absorb all leftover height. Hiding it instead would let
+        // the whole layout collapse towards the middle of the panel.
+        scroll.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .vertical)
+        scroll.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .vertical)
+
+        rebuildClipboard()
+        return stack
+    }
+
+    @objc private func clipboardSwitchFlipped(_ sender: NSSwitch) {
+        ClipboardStore.shared.isEnabled = sender.state == .on
+        rebuildClipboard()
+        showStatus(sender.state == .on ? L.t(.clipboardOn) : L.t(.clipboardOff), isError: false)
+    }
+
+    @objc private func clipboardChanged() {
+        guard currentTab == .clipboard else { return }
+        rebuildClipboard()
+    }
+
+    private func rebuildClipboard() {
+        guard clipboardList != nil else { return }
+        let entries = ClipboardStore.shared.entries
+
+        clipboardList.arrangedSubviews.forEach {
+            clipboardList.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+
+        if entries.isEmpty {
+            // Empty state lives inside the list so the scroll view keeps its
+            // height and the rest of the panel stays put.
+            let empty = NSTextField(labelWithString: L.t(.clipboardEmpty))
+            empty.font = NSFont.systemFont(ofSize: 12)
+            empty.textColor = .tertiaryLabelColor
+            empty.alignment = .center
+            empty.maximumNumberOfLines = 2
+            let padding = NSStackView(views: [empty])
+            padding.orientation = .vertical
+            padding.alignment = .centerX
+            padding.edgeInsets = NSEdgeInsets(top: 40, left: 12, bottom: 12, right: 12)
+            padding.translatesAutoresizingMaskIntoConstraints = false
+            clipboardList.addArrangedSubview(padding)
+            padding.widthAnchor.constraint(equalTo: clipboardList.widthAnchor).isActive = true
+        } else {
+            for entry in entries {
+                let capsule = wrapInCapsule(makeClipboardRow(entry))
+                clipboardList.addArrangedSubview(capsule)
+                capsule.widthAnchor.constraint(equalTo: clipboardList.widthAnchor).isActive = true
+            }
+        }
+
+        clipboardSwitch?.state = ClipboardStore.shared.isEnabled ? .on : .off
+        clipboardCountLabel?.stringValue = entries.isEmpty ? "" : String(format: L.t(.clipboardCount), entries.count)
+    }
+
+    /// One shelf row: preview + relative time on the left, pin and delete on
+    /// the right. Clicking the preview puts the entry back on the pasteboard.
+    private func makeClipboardRow(_ entry: ClipboardEntry) -> NSView {
+        let preview = NSButton(title: entry.preview, target: nil, action: nil)
+        preview.isBordered = false
+        preview.alignment = .left
+        preview.font = NSFont.systemFont(ofSize: 12, weight: .regular)
+        preview.lineBreakMode = .byTruncatingTail
+        preview.setButtonType(.momentaryChange)
+        preview.toolTip = entry.preview
+        preview.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        preview.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let copyHandler = ActionHandler { [weak self] in
+            ClipboardStore.shared.copyToPasteboard(entry.id)
+            self?.showStatus(L.t(.clipboardCopied), isError: false)
+        }
+        preview.target = copyHandler
+        preview.action = #selector(ActionHandler.run)
+        objc_setAssociatedObject(preview, "handler", copyHandler, .OBJC_ASSOCIATION_RETAIN)
+
+        let time = NSTextField(labelWithString: entry.relativeTime)
+        time.font = NSFont.systemFont(ofSize: 9, weight: .regular)
+        time.textColor = .tertiaryLabelColor
+        time.lineBreakMode = .byTruncatingTail
+
+        let textStack = NSStackView(views: [preview, time])
+        textStack.orientation = .vertical
+        textStack.alignment = .leading
+        textStack.spacing = 1
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let pin = iconButton(symbol: entry.pinned ? "pin.fill" : "pin",
+                             tint: entry.pinned ? .controlAccentColor : .secondaryLabelColor,
+                             tooltip: entry.pinned ? L.t(.clipboardUnpin) : L.t(.clipboardPin)) { [weak self] in
+            ClipboardStore.shared.togglePin(entry.id)
+            self?.rebuildClipboard()
+        }
+
+        let remove = iconButton(symbol: "xmark", tint: .secondaryLabelColor,
+                                tooltip: L.t(.clipboardRemove)) { [weak self] in
+            ClipboardStore.shared.remove(entry.id)
+            self?.rebuildClipboard()
+        }
+
+        let row = NSStackView(views: [textStack, pin, remove])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 6
+        row.translatesAutoresizingMaskIntoConstraints = false
+        row.edgeInsets = NSEdgeInsets(top: 8, left: 10, bottom: 8, right: 8)
+        return row
+    }
+
+    /// A borderless symbol button used for the per-row pin / delete actions.
+    private func iconButton(symbol: String, tint: NSColor, tooltip: String,
+                            action: @escaping () -> Void) -> NSButton {
+        let button = NSButton(title: "", target: nil, action: nil)
+        button.isBordered = false
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: tooltip)
+        button.contentTintColor = tint
+        button.toolTip = tooltip
+        button.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        let handler = ActionHandler(action: action)
+        button.target = handler
+        button.action = #selector(ActionHandler.run)
+        objc_setAssociatedObject(button, "handler", handler, .OBJC_ASSOCIATION_RETAIN)
+        return button
     }
 
     // MARK: - Tab: Launch

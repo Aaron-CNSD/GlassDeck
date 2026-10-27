@@ -99,7 +99,7 @@ enum L {
         case appName
         case appTagline
 
-        case tabSwitches, tabMonitor, tabWindows, tabCleaner, tabTools, tabLaunch
+        case tabSwitches, tabMonitor, tabWindows, tabCleaner, tabTools, tabClipboard, tabLaunch
 
         // Toggles
         case darkMode, hiddenFiles, pathBar, desktopIcons, keepAwake, mute,
@@ -143,6 +143,11 @@ enum L {
         // Search & scenes
         case searchPlaceholder, scenesTitle, scenePresentation, sceneFocus,
              sceneTidy, sceneAllOff, noMatches, sceneApplied
+
+        // Clipboard shelf
+        case clipboardCapture, clipboardEmpty, clipboardClear, clipboardCleared,
+             clipboardHint, clipboardCopied, clipboardOn, clipboardOff,
+             clipboardPin, clipboardUnpin, clipboardRemove, clipboardCount
     }
 }
 
@@ -261,6 +266,20 @@ private let en: [L.Key: String] = [
     .sceneAllOff: "All Off",
     .noMatches: "No switches match that search",
     .sceneApplied: "Scene applied",
+
+    .tabClipboard: "Clipboard",
+    .clipboardCapture: "Record clipboard",
+    .clipboardEmpty: "Nothing yet. Copy some text and it lands here.",
+    .clipboardClear: "Clear",
+    .clipboardCleared: "Clipboard history cleared",
+    .clipboardHint: "Stored on this Mac only. Items marked confidential by password managers are skipped.",
+    .clipboardCopied: "Copied back to clipboard",
+    .clipboardOn: "Clipboard history on",
+    .clipboardOff: "Clipboard history off",
+    .clipboardPin: "Pin to keep",
+    .clipboardUnpin: "Unpin",
+    .clipboardRemove: "Remove",
+    .clipboardCount: "%d items",
 ]
 
 // MARK: - 简体中文
@@ -378,6 +397,20 @@ private let zhHans: [L.Key: String] = [
     .sceneAllOff: "全关",
     .noMatches: "没有匹配的开关",
     .sceneApplied: "场景已应用",
+
+    .tabClipboard: "剪贴板",
+    .clipboardCapture: "记录剪贴板",
+    .clipboardEmpty: "还没有记录，复制点什么就会出现在这里。",
+    .clipboardClear: "清空",
+    .clipboardCleared: "剪贴板历史已清空",
+    .clipboardHint: "只保存在这台 Mac 上；密码管理器标记为机密的内容会自动跳过。",
+    .clipboardCopied: "已复制回剪贴板",
+    .clipboardOn: "剪贴板历史已开启",
+    .clipboardOff: "剪贴板历史已关闭",
+    .clipboardPin: "固定保留",
+    .clipboardUnpin: "取消固定",
+    .clipboardRemove: "删除",
+    .clipboardCount: "%d 条",
 ]
 
 // MARK: - 繁體中文
@@ -495,6 +528,20 @@ private let zhHant: [L.Key: String] = [
     .sceneAllOff: "全關",
     .noMatches: "沒有符合的開關",
     .sceneApplied: "場景已套用",
+
+    .tabClipboard: "剪貼板",
+    .clipboardCapture: "記錄剪貼板",
+    .clipboardEmpty: "還沒有記錄，複製點什麼就會出現在這裡。",
+    .clipboardClear: "清空",
+    .clipboardCleared: "剪貼板歷史已清空",
+    .clipboardHint: "只保存在這台 Mac 上；密碼管理器標記為機密的內容會自動跳過。",
+    .clipboardCopied: "已複製回剪貼板",
+    .clipboardOn: "剪貼板歷史已開啟",
+    .clipboardOff: "剪貼板歷史已關閉",
+    .clipboardPin: "固定保留",
+    .clipboardUnpin: "取消固定",
+    .clipboardRemove: "刪除",
+    .clipboardCount: "%d 條",
 ]
 
 // MARK: - 日本語
@@ -612,6 +659,20 @@ private let ja: [L.Key: String] = [
     .sceneAllOff: "全てオフ",
     .noMatches: "一致するスイッチがありません",
     .sceneApplied: "シーンを適用しました",
+
+    .tabClipboard: "クリップボード",
+    .clipboardCapture: "クリップボードを記録",
+    .clipboardEmpty: "まだ記録はありません。コピーするとここに残ります。",
+    .clipboardClear: "消去",
+    .clipboardCleared: "クリップボード履歴を消去しました",
+    .clipboardHint: "この Mac にのみ保存されます。パスワードマネージャが機密指定した内容は記録しません。",
+    .clipboardCopied: "クリップボードに戻しました",
+    .clipboardOn: "クリップボード履歴をオンにしました",
+    .clipboardOff: "クリップボード履歴をオフにしました",
+    .clipboardPin: "固定して残す",
+    .clipboardUnpin: "固定を解除",
+    .clipboardRemove: "削除",
+    .clipboardCount: "%d 件",
 ]
 
 // MARK: - 한국어
@@ -729,4 +790,18 @@ private let ko: [L.Key: String] = [
     .sceneAllOff: "모두 끔",
     .noMatches: "일치하는 스위치가 없습니다",
     .sceneApplied: "장면을 적용했습니다",
+
+    .tabClipboard: "클립보드",
+    .clipboardCapture: "클립보드 기록",
+    .clipboardEmpty: "아직 기록이 없습니다. 복사하면 여기에 남습니다.",
+    .clipboardClear: "지우기",
+    .clipboardCleared: "클립보드 기록을 지웠습니다",
+    .clipboardHint: "이 Mac에만 저장됩니다. 암호 관리자가 기밀로 표시한 항목은 기록하지 않습니다.",
+    .clipboardCopied: "클립보드로 다시 복사했습니다",
+    .clipboardOn: "클립보드 기록 켜짐",
+    .clipboardOff: "클립보드 기록 꺼짐",
+    .clipboardPin: "고정",
+    .clipboardUnpin: "고정 해제",
+    .clipboardRemove: "삭제",
+    .clipboardCount: "%d개",
 ]

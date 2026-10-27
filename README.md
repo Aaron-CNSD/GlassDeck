@@ -4,7 +4,7 @@
 
 # Glass Deck
 
-**Eleven system switches, live monitoring and cache cleanup — in one glass panel in your menu bar.**
+**Eleven system switches, a clipboard shelf, live monitoring and cache cleanup — in one glass panel in your menu bar.**
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-111?logo=apple&logoColor=white)](https://aarongame.com)
 [![Release](https://img.shields.io/github/v/release/Aaron-CNSD/GlassDeck?color=5b8cff&label=release)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
@@ -18,9 +18,15 @@
 
 ---
 
+## New in 1.6.1
+
+A **clipboard shelf** in the panel. Copy anything anywhere and the last 60 text clips are already there when you open Glass Deck: click a row to put it back on the pasteboard, pin the ones you paste daily so they never age out, delete the rest. History is written to `~/Library/Application Support/GlassDeck/clipboard.json` on this Mac only — nothing leaves the machine. Anything a password manager marks as confidential is skipped and never recorded, and the record switch at the top of the tab turns the whole thing off.
+
+The tab bar is now icon-only with tooltips, because seven labelled segments no longer fit in a 380 pt panel and truncating "Clipb…" helps nobody.
+
 ## New in 1.6.0
 
-The Mac app now includes the offline workspace. Switch between **System controls** and **Workspace** in the main window, or open Workspace from the menu bar's right-click menu. Focus timers, tasks, notes and tools are bundled inside the app and do not need a web server. JSON/TXT exports use macOS Save dialogs and backups can be imported through a file picker. Native and browser data are separate; transfer them using backup export/import. The workspace interface is currently in Simplified Chinese; native system controls retain their existing five languages.
+The app added the offline workspace. Switch between **System controls** and **Workspace** in the main window, or open Workspace from the menu bar's right-click menu. Focus timers, tasks, notes and tools are bundled inside the app and do not need a web server. JSON/TXT exports use macOS Save dialogs and backups can be imported through a file picker. Native and browser data are separate; transfer them using backup export/import. The workspace interface is currently in Simplified Chinese; native system controls retain their existing five languages.
 
 ## Cross platform web app
 
@@ -36,7 +42,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.6.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.6.1.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.1.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>
@@ -89,6 +95,9 @@ Every running app in a list, with *bring to front* and **force quit** — the bu
 **Cleaner**
 Scans Xcode DerivedData, Homebrew / CocoaPods / SwiftPM caches, tells you what each one weighs before you commit.
 
+**Clipboard**
+Your last 60 text clips, pinned or not, searchable by eye and one click from the pasteboard. Password-manager items are skipped.
+
 **Tools**
 Screenshot, screen recording, and **clipboard OCR** (Vision framework — copy an image, get text back).
 
@@ -138,6 +147,7 @@ Sources/GlassDeck/     Main app (pure AppKit)
   GlassPanel.swift       Liquid Glass surface (NSGlassEffectView)
   DeckViewController.swift  The panel layout
   Scenes.swift           Multi-switch presets
+  ClipboardStore.swift   Clipboard history + persistence
   SystemController.swift System state read/write
   Localization.swift     5-language string tables
 Sources/Shared/        Model shared with the widget

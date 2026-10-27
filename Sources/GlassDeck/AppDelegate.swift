@@ -27,6 +27,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = applicationMenu
         setupMenuBarItem()
         setupPopover()
+        // Clipboard history runs for the whole session, not just while the
+        // panel is open, so a copy made anywhere lands in the shelf.
+        ClipboardStore.shared.start()
         // Open the control window automatically so the app is visible on launch.
         DispatchQueue.main.async { [weak self] in
             self?.openControlWindow()

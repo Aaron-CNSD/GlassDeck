@@ -39,7 +39,7 @@ targets:
       path: Widget/Info.plist
       properties:
         CFBundleDisplayName: GlassDeckWidget
-        CFBundleShortVersionString: "1.6.0"
+        CFBundleShortVersionString: "1.6.1"
         CFBundleVersion: "1"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
@@ -85,7 +85,7 @@ targets:
         CFBundleDisplayName: Glass Deck
         CFBundleName: Glass Deck
         CFBundleIconFile: AppIcon
-        CFBundleShortVersionString: "1.6.0"
+        CFBundleShortVersionString: "1.6.1"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: "MIT License"
         NSAppleEventsUsageDescription: "Glass Deck controls Finder and System Events to flip your system switches (dark mode, mute, empty trash)."

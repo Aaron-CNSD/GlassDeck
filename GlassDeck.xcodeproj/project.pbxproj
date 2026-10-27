@@ -33,6 +33,7 @@
 		CFCB1A571E7AF046FB252397 /* DisplayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B3898D0DAA160262E329E6 /* DisplayController.swift */; };
 		D0D7098A2EB38BDDEF3CC0FA /* Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8D0A7B57916D3E1024663D /* Toggle.swift */; };
 		E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863037DB92A329D08C322982 /* QuickLaunch.swift */; };
+		F88750B2FD877E8451F4911A /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC599D485DE6B1EF68F592 /* ClipboardStore.swift */; };
 		FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -101,6 +102,7 @@
 		658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewController.swift; sourceTree = "<group>"; };
 		6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		7E6EA7F5686EC718B878BF95 /* Shared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Shared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		84DC599D485DE6B1EF68F592 /* ClipboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardStore.swift; sourceTree = "<group>"; };
 		863037DB92A329D08C322982 /* QuickLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLaunch.swift; sourceTree = "<group>"; };
 		96B3898D0DAA160262E329E6 /* DisplayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayController.swift; sourceTree = "<group>"; };
 		98031268E60D243CD3CDC35D /* SystemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemController.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				133135A76E2D7EC9B7F234FD /* AppDelegate.swift */,
+				84DC599D485DE6B1EF68F592 /* ClipboardStore.swift */,
 				FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */,
 				03216F568B076BB99A03D70A /* DevTools.swift */,
 				6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */,
@@ -363,6 +366,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C945B2E4B1E559EE0D50D0A9 /* AppDelegate.swift in Sources */,
+				F88750B2FD877E8451F4911A /* ClipboardStore.swift in Sources */,
 				15335ECDB5D2B86B505CCB08 /* DeckViewController.swift in Sources */,
 				C7953F723D1D9B7CB3D61A6A /* DevTools.swift in Sources */,
 				7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */,
