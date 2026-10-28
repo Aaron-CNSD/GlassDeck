@@ -26,6 +26,7 @@
 		78D0797BC08D64646B17E958 /* Scenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBD078FC605731DF0BF49E9 /* Scenes.swift */; };
 		7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */; };
 		8D09CCD0A83557FD970B430F /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; };
+		9E0C583336B14C0B88A86515 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DFAF187B97031EF4513530E /* CommandPalette.swift */; };
 		A1929895353FD651BDEF145A /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8532222238B11B5097EB1A7 /* WindowController.swift */; };
 		A8EA2FF8186C4F9885BCA4D5 /* Shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; };
 		AE8168B0098D36361840134E /* GlassDeckWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AAB94AC23EEF66527489CE13 /* GlassDeckWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -100,6 +101,7 @@
 		3C8D0A7B57916D3E1024663D /* Toggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toggle.swift; sourceTree = "<group>"; };
 		4082B004A45FD219D40CFA53 /* GlassDeckWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassDeckWidget.swift; sourceTree = "<group>"; };
 		43A86B0487E31C40506B5B4D /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		4DFAF187B97031EF4513530E /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
 		5F04D6AED68DD93507A9982B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		63F1CF7DB03B75A1225D4BEF /* GlassDeckWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GlassDeckWidget.entitlements; sourceTree = "<group>"; };
 		658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceViewController.swift; sourceTree = "<group>"; };
@@ -158,6 +160,7 @@
 			children = (
 				133135A76E2D7EC9B7F234FD /* AppDelegate.swift */,
 				84DC599D485DE6B1EF68F592 /* ClipboardStore.swift */,
+				4DFAF187B97031EF4513530E /* CommandPalette.swift */,
 				FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */,
 				03216F568B076BB99A03D70A /* DevTools.swift */,
 				6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */,
@@ -373,6 +376,7 @@
 			files = (
 				C945B2E4B1E559EE0D50D0A9 /* AppDelegate.swift in Sources */,
 				F88750B2FD877E8451F4911A /* ClipboardStore.swift in Sources */,
+				9E0C583336B14C0B88A86515 /* CommandPalette.swift in Sources */,
 				15335ECDB5D2B86B505CCB08 /* DeckViewController.swift in Sources */,
 				C7953F723D1D9B7CB3D61A6A /* DevTools.swift in Sources */,
 				7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */,

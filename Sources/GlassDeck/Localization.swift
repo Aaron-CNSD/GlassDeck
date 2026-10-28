@@ -149,6 +149,11 @@ enum L {
         case clipboardCapture, clipboardEmpty, clipboardClear, clipboardCleared,
              clipboardHint, clipboardCopied, clipboardOn, clipboardOff,
              clipboardPin, clipboardUnpin, clipboardRemove, clipboardCount
+
+        // Command palette
+        case paletteTitle, palettePlaceholder, paletteHint, paletteEmpty,
+             paletteGroupSwitch, paletteGroupAction, paletteGroupJump,
+             stateOn, stateOff
     }
 }
 
@@ -271,6 +276,16 @@ private let en: [L.Key: String] = [
     .sceneAllOff: "All Off",
     .noMatches: "No switches match that search",
     .sceneApplied: "Scene applied",
+
+    .paletteTitle: "Command Palette",
+    .palettePlaceholder: "Search switches, actions and tabs",
+    .paletteHint: "↑↓ select · ↩ run · esc close",
+    .paletteEmpty: "Nothing matches. Try a shorter word.",
+    .paletteGroupSwitch: "Switch",
+    .paletteGroupAction: "Action",
+    .paletteGroupJump: "Tab",
+    .stateOn: "On",
+    .stateOff: "Off",
 
     .tabClipboard: "Clipboard",
     .clipboardCapture: "Record clipboard",
@@ -407,6 +422,16 @@ private let zhHans: [L.Key: String] = [
     .noMatches: "没有匹配的开关",
     .sceneApplied: "场景已应用",
 
+    .paletteTitle: "命令面板",
+    .palettePlaceholder: "搜索开关、动作或标签页",
+    .paletteHint: "↑↓ 选择 · ↩ 执行 · esc 关闭",
+    .paletteEmpty: "没有匹配的命令，换个更短的词试试",
+    .paletteGroupSwitch: "开关",
+    .paletteGroupAction: "动作",
+    .paletteGroupJump: "标签页",
+    .stateOn: "已开启",
+    .stateOff: "已关闭",
+
     .tabClipboard: "剪贴板",
     .clipboardCapture: "记录剪贴板",
     .clipboardEmpty: "还没有记录，复制点什么就会出现在这里。",
@@ -541,6 +566,16 @@ private let zhHant: [L.Key: String] = [
     .sceneAllOff: "全關",
     .noMatches: "沒有符合的開關",
     .sceneApplied: "場景已套用",
+
+    .paletteTitle: "命令面板",
+    .palettePlaceholder: "搜尋開關、動作或標籤頁",
+    .paletteHint: "↑↓ 選擇 · ↩ 執行 · esc 關閉",
+    .paletteEmpty: "沒有符合的指令，換個更短的詞試試",
+    .paletteGroupSwitch: "開關",
+    .paletteGroupAction: "動作",
+    .paletteGroupJump: "標籤頁",
+    .stateOn: "已開啟",
+    .stateOff: "已關閉",
 
     .tabClipboard: "剪貼板",
     .clipboardCapture: "記錄剪貼板",
@@ -677,6 +712,16 @@ private let ja: [L.Key: String] = [
     .noMatches: "一致するスイッチがありません",
     .sceneApplied: "シーンを適用しました",
 
+    .paletteTitle: "コマンドパレット",
+    .palettePlaceholder: "スイッチ・アクション・タブを検索",
+    .paletteHint: "↑↓ 選択 · ↩ 実行 · esc 閉じる",
+    .paletteEmpty: "一致するコマンドがありません。短い語で試してください",
+    .paletteGroupSwitch: "スイッチ",
+    .paletteGroupAction: "アクション",
+    .paletteGroupJump: "タブ",
+    .stateOn: "オン",
+    .stateOff: "オフ",
+
     .tabClipboard: "クリップボード",
     .clipboardCapture: "クリップボードを記録",
     .clipboardEmpty: "まだ記録はありません。コピーするとここに残ります。",
@@ -811,6 +856,16 @@ private let ko: [L.Key: String] = [
     .sceneAllOff: "모두 끔",
     .noMatches: "일치하는 스위치가 없습니다",
     .sceneApplied: "장면을 적용했습니다",
+
+    .paletteTitle: "명령 팔레트",
+    .palettePlaceholder: "스위치, 동작, 탭 검색",
+    .paletteHint: "↑↓ 선택 · ↩ 실행 · esc 닫기",
+    .paletteEmpty: "일치하는 명령이 없습니다. 더 짧은 단어로 시도하세요",
+    .paletteGroupSwitch: "스위치",
+    .paletteGroupAction: "동작",
+    .paletteGroupJump: "탭",
+    .stateOn: "켜짐",
+    .stateOff: "꺼짐",
 
     .tabClipboard: "클립보드",
     .clipboardCapture: "클립보드 기록",

@@ -4,7 +4,7 @@
 
 # Glass Deck
 
-**Eleven system switches, a clipboard shelf, live graphs with a process list and cache cleanup — in one glass panel in your menu bar.**
+**Eleven system switches, a ⌘K command palette, a clipboard shelf, live graphs with a process list and cache cleanup — in one glass panel in your menu bar.**
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-111?logo=apple&logoColor=white)](https://aarongame.com)
 [![Release](https://img.shields.io/github/v/release/Aaron-CNSD/GlassDeck?color=5b8cff&label=release)](https://github.com/Aaron-CNSD/GlassDeck/releases/latest)
@@ -17,6 +17,12 @@
 </div>
 
 ---
+
+## New in 1.7.0
+
+Press **⌘K** and the whole deck collapses into one search field. Every switch, every tool action and every tab is one query away: type `dark` to flip the theme, `trash` to empty the bin, `截图` to grab the screen, then ↑↓ to pick and ↩ to run — no mouse, no tab-hopping. English words find Chinese controls because every switch carries its own aliases alongside its translated title, and the right-hand note counts as search text, so `动作` lists every action.
+
+Opening it never blocks: switch state comes from the cache the background refresh already filled instead of shelling out to `defaults` and `osascript` on the main thread. The action list is the Tools tab flattened — same calls, same titles — and `⌘1`…`⌘7` jump straight to a tab. Nine new strings, translated into all five languages.
 
 ## New in 1.6.2
 
@@ -48,7 +54,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.6.2.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.6.2.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.7.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.7.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>

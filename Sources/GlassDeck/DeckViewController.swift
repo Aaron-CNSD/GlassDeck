@@ -37,6 +37,12 @@ final class DeckViewController: NSViewController {
     private var contentViews: [Tab: NSView] = [:]
     private var monitorTimer: Timer?
     private var statusBanner: StatusBanner!
+    /// ⌘K overlay, built the first time it is summoned.
+    private var palette: CommandPaletteView?
+    private var keyMonitor: Any?
+    /// Last known switch states, so the palette can label a switch without
+    /// shelling out on the main thread while the overlay is opening.
+    private var toggleStates: [String: Bool] = [:]
 
     override func loadView() {
         let panel = GlassPanel()
@@ -72,6 +78,33 @@ final class DeckViewController: NSViewController {
 
         header.addArrangedSubview(title)
         header.addArrangedSubview(subtitle)
+
+        // The shortcut is useless if nobody knows it exists, so the header
+        // carries the chord in the same monospace the palette footer uses.
+        let paletteChip = NSButton(title: "⌘K", target: self, action: #selector(paletteChipTapped))
+        paletteChip.isBordered = false
+        paletteChip.bezelStyle = .regularSquare
+        paletteChip.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
+        paletteChip.contentTintColor = .secondaryLabelColor
+        paletteChip.toolTip = L.t(.paletteTitle)
+        paletteChip.wantsLayer = true
+        paletteChip.layer?.cornerRadius = 6
+        paletteChip.layer?.backgroundColor = NSColor.secondaryLabelColor.withAlphaComponent(0.12).cgColor
+        paletteChip.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            paletteChip.widthAnchor.constraint(equalToConstant: 40),
+            paletteChip.heightAnchor.constraint(equalToConstant: 22),
+        ])
+
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+
+        let headerRow = NSStackView(views: [header, spacer, paletteChip])
+        headerRow.orientation = .horizontal
+        headerRow.alignment = .centerY
+        headerRow.spacing = 8
+        headerRow.translatesAutoresizingMaskIntoConstraints = false
 
         // Segmented control for tabs. Seven labels no longer fit in a 380 pt
         // panel, so the bar is icon-only and every segment carries a tooltip.
@@ -111,7 +144,7 @@ final class DeckViewController: NSViewController {
         contentViews[.launch] = buildLaunchView()
 
         // Assemble
-        let root = NSStackView(views: [header, segmented, contentContainer, statusBanner])
+        let root = NSStackView(views: [headerRow, segmented, contentContainer, statusBanner])
         root.orientation = .vertical
         root.alignment = .leading
         root.spacing = 12
@@ -123,6 +156,7 @@ final class DeckViewController: NSViewController {
             root.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
             root.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
             root.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -16),
+            headerRow.widthAnchor.constraint(equalTo: root.widthAnchor),
             segmented.widthAnchor.constraint(equalTo: root.widthAnchor),
             contentContainer.widthAnchor.constraint(equalTo: root.widthAnchor),
             contentContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 300),
@@ -208,6 +242,237 @@ final class DeckViewController: NSViewController {
         if tab == .clipboard { rebuildClipboard() }
         if tab == .monitor { refreshProcesses() }
     }
+
+    // MARK: - Command palette
+
+    /// ⌘K. Every switch, action and tab in one list, reachable from one field.
+    ///
+    /// The palette does not own any state of its own: it is built from the
+    /// same `ToggleLibrary`, `SystemController` and tab list the rest of the
+    /// deck already uses, so it can never drift out of sync with the tabs.
+    @objc private func paletteChipTapped() {
+        showPalette()
+    }
+
+    private func showPalette() {
+        let palette = ensurePalette()
+        palette.present(items: makePaletteItems())
+        palette.focusSearch()
+    }
+
+    private func ensurePalette() -> CommandPaletteView {
+        if let palette = palette { return palette }
+
+        let palette = CommandPaletteView()
+        palette.onDismiss = { [weak self] in
+            guard let self = self else { return }
+            _ = self.view.window?.makeFirstResponder(self.view)
+        }
+        view.addSubview(palette)
+        NSLayoutConstraint.activate([
+            palette.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            palette.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            palette.topAnchor.constraint(equalTo: view.topAnchor),
+            palette.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        self.palette = palette
+        return palette
+    }
+
+    /// The live command set. Rebuilt on every open, so switch labels carry the
+    /// state that was read a moment ago rather than whenever the app launched.
+    private func makePaletteItems() -> [PaletteItem] {
+        var items: [PaletteItem] = []
+
+        for toggle in ToggleLibrary.all {
+            let known = toggleStates[toggle.id]
+            let stateNote = known.map { $0 ? L.t(.stateOn) : L.t(.stateOff) }
+            let detail = [L.t(.paletteGroupSwitch), stateNote]
+                .compactMap { $0 }
+                .joined(separator: " · ")
+
+            items.append(PaletteItem(
+                id: "switch." + toggle.id,
+                title: toggle.title,
+                detail: detail,
+                symbol: toggle.symbol,
+                group: .toggle,
+                keywords: [toggle.id] + PaletteAliases.words(forToggle: toggle.id),
+                perform: { [weak self] in
+                    // Flip from the state the row showed, so what the user
+                    // read is what the switch does.
+                    let desired = !(known ?? false)
+                    toggle.setState(desired)
+                    self?.toggleStates[toggle.id] = desired
+                    self?.refreshAfterPaletteCommand()
+                }))
+        }
+
+        for item in toolCommands() {
+            items.append(item)
+        }
+
+        for (index, tab) in Tab.allCases.enumerated() {
+            items.append(PaletteItem(
+                id: "tab.\(index)",
+                title: tab.title,
+                detail: L.t(.paletteGroupJump),
+                symbol: tab.symbol,
+                group: .jump,
+                keywords: ["tab", "go", "\(index + 1)"],
+                perform: { [weak self] in
+                    guard let self = self else { return }
+                    self.segmented.selectedSegment = index
+                    self.showTab(tab)
+                }))
+        }
+
+        return items
+    }
+
+    /// The Tools tab, flattened. Same calls, same titles — a keyboard route,
+    /// not a second implementation.
+    private func toolCommands() -> [PaletteItem] {
+        let group = L.t(.paletteGroupAction)
+
+        func item(_ id: String, _ title: String, _ symbol: String,
+                  _ keywords: [String], _ perform: @escaping () -> Void) -> PaletteItem {
+            PaletteItem(id: "action." + id, title: title, detail: group,
+                        symbol: symbol, group: .action, keywords: keywords,
+                        perform: perform)
+        }
+
+        return [
+            item("diagnostics", L.t(.permissionCheck), "stethoscope",
+                 ["check", "self test", "自检", "诊断"]) { [weak self] in
+                self?.showDiagnostics()
+            },
+            item("screenshot", L.t(.screenshot), "camera",
+                 ["screenshot", "capture", "shot", "截图"]) {
+                DevTools.captureScreenshot { error in
+                    guard let error = error else { return }
+                    DispatchQueue.main.async {
+                        self.showStatus(error, isError: true,
+                                        actionTitle: L.t(.openSettings),
+                                        action: { PermissionCenter.openScreenRecordingSettings() })
+                    }
+                }
+            },
+            item("record", L.t(.screenRecord), "record.circle",
+                 ["record", "video", "录屏"]) {
+                DevTools.recordScreen { error in
+                    guard let error = error else { return }
+                    DispatchQueue.main.async {
+                        self.showStatus(error, isError: true,
+                                        actionTitle: L.t(.openSettings),
+                                        action: { PermissionCenter.openScreenRecordingSettings() })
+                    }
+                }
+            },
+            item("ocr", L.t(.ocr), "text.viewfinder",
+                 ["ocr", "text", "识别"]) {
+                DevTools.ocrClipboard { text in
+                    DispatchQueue.main.async {
+                        guard let text = text else {
+                            self.showStatus(L.t(.ocrNoImage), isError: true)
+                            return
+                        }
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                        self.showStatus(L.t(.ocrCopied), isError: false)
+                    }
+                }
+            },
+            item("trash", L.t(.emptyTrash), "trash",
+                 ["trash", "bin", "delete", "废纸篓"]) {
+                SystemController.emptyTrash()
+            },
+            item("clipboard", L.t(.emptyClipboard), "doc.on.clipboard",
+                 ["clipboard", "paste", "剪贴板"]) {
+                SystemController.emptyClipboard()
+            },
+            item("screensaver", L.t(.screenSaver), "sparkles.tv",
+                 ["screensaver", "屏保"]) {
+                SystemController.startScreenSaver()
+            },
+            item("dns", L.t(.dnsCache), "network.slash",
+                 ["dns", "cache", "缓存"]) {
+                SystemController.flushDNSCache()
+            },
+            item("finder", L.t(.restartFinder), "arrow.clockwise",
+                 ["finder", "restart", "重启"]) {
+                SystemController.restartFinder()
+            },
+            item("ip", L.t(.copyIP), "number",
+                 ["ip", "address", "network", "地址"]) { [weak self] in
+                guard let ip = SystemController.localIP() else {
+                    self?.showStatus("\(L.t(.copyIP)) — \(L.t(.failed))", isError: true)
+                    return
+                }
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(ip, forType: .string)
+                self?.showStatus("\(L.t(.copied)): \(ip)", isError: false)
+            },
+            item("lock", L.t(.lockScreen), "lock.display",
+                 ["lock", "screen", "锁定"]) {
+                SystemController.lockScreen()
+            },
+        ]
+    }
+
+    /// Close the palette, hand focus back to the deck, then re-read the system
+    /// state — the read shells out, so it gets a beat rather than a spinner.
+    private func refreshAfterPaletteCommand() {
+        _ = view.window?.makeFirstResponder(view)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            self?.refreshToggles()
+        }
+    }
+
+    /// One local monitor for the whole deck: ⌘K, ⌘1…⌘7, and everything the
+    /// palette wants while it is open.
+    private func installKeyMonitor() {
+        guard keyMonitor == nil else { return }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, self.view.window?.isKeyWindow == true else { return event }
+            return self.handleKeyDown(event) ? nil : event
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) -> Bool {
+        if let palette = palette, !palette.isHidden {
+            return palette.handleKey(event)
+        }
+
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard flags == .command, let characters = event.charactersIgnoringModifiers else {
+            return false
+        }
+
+        if characters.lowercased() == "k" {
+            showPalette()
+            return true
+        }
+
+        if let number = Int(characters), number >= 1, number <= Tab.allCases.count {
+            let tab = Tab.allCases[number - 1]
+            segmented.selectedSegment = number - 1
+            showTab(tab)
+            return true
+        }
+
+        return false
+    }
+
+    #if DEBUG
+    /// Debug hook for the offscreen layout harness: open the palette with a
+    /// query already typed, with no keyboard anywhere in sight.
+    func showPaletteForLayoutCheck(query: String) {
+        let palette = ensurePalette()
+        palette.present(items: makePaletteItems(), query: query)
+        view.layoutSubtreeIfNeeded()
+    }
+    #endif
 
     // MARK: - Tab: Toggles
 
@@ -1311,6 +1576,7 @@ final class DeckViewController: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         refreshToggles()
+        installKeyMonitor()
     }
 
     private func refreshToggles() {
@@ -1322,9 +1588,15 @@ final class DeckViewController: NSViewController {
             let states = self.toggleRows.map { row -> Bool in
                 row.currentToggleState()
             }
+            let identifiers = self.toggleItems.map { $0.id }
             DispatchQueue.main.async {
                 for (row, state) in zip(self.toggleRows, states) {
                     row.applyState(state)
+                }
+                // The palette labels each switch from this cache instead of
+                // shelling out again while the overlay is opening.
+                for (identifier, state) in zip(identifiers, states) {
+                    self.toggleStates[identifier] = state
                 }
             }
         }
@@ -1332,6 +1604,9 @@ final class DeckViewController: NSViewController {
 
     deinit {
         monitorTimer?.invalidate()
+        if let keyMonitor = keyMonitor {
+            NSEvent.removeMonitor(keyMonitor)
+        }
         NotificationCenter.default.removeObserver(self)
     }
 }
