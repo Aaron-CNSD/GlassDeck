@@ -6,7 +6,7 @@ import ObjectiveC
 final class DeckViewController: NSViewController {
 
     private enum Tab: Int, CaseIterable {
-        case toggles, monitor, windows, cleaner, tools, clipboard, launch
+        case toggles, monitor, windows, cleaner, tools, clipboard, launch, presets
         var title: String {
             switch self {
             case .toggles: return L.t(.tabSwitches)
@@ -16,6 +16,7 @@ final class DeckViewController: NSViewController {
             case .tools: return L.t(.tabTools)
             case .clipboard: return L.t(.tabClipboard)
             case .launch: return L.t(.tabLaunch)
+            case .presets: return L.t(.tabPresets)
             }
         }
         var symbol: String {
@@ -27,6 +28,7 @@ final class DeckViewController: NSViewController {
             case .tools: return "wrench.and.screwdriver"
             case .clipboard: return "doc.on.clipboard"
             case .launch: return "bolt"
+            case .presets: return "bookmark.fill"
             }
         }
     }
@@ -142,6 +144,7 @@ final class DeckViewController: NSViewController {
         contentViews[.tools] = buildToolsView()
         contentViews[.clipboard] = buildClipboardView()
         contentViews[.launch] = buildLaunchView()
+        contentViews[.presets] = buildPresetsView()
 
         // Assemble
         let root = NSStackView(views: [headerRow, segmented, contentContainer, statusBanner])
@@ -177,6 +180,11 @@ final class DeckViewController: NSViewController {
         NotificationCenter.default.addObserver(self,
                                               selector: #selector(clipboardChanged),
                                               name: ClipboardStore.changed,
+                                              object: nil)
+        // A preset saved from the palette has to appear in the list too.
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(presetsChanged),
+                                              name: PresetStore.changed,
                                               object: nil)
     }
 
@@ -241,6 +249,7 @@ final class DeckViewController: NSViewController {
         }
         if tab == .clipboard { rebuildClipboard() }
         if tab == .monitor { refreshProcesses() }
+        if tab == .presets { rebuildPresets() }
     }
 
     // MARK: - Command palette
@@ -326,6 +335,34 @@ final class DeckViewController: NSViewController {
                     self.showTab(tab)
                 }))
         }
+
+        // Saved presets sit between the switches and the tabs: they act on
+        // switches, but one entry stands for eleven.
+        for preset in PresetStore.shared.presets {
+            items.append(PaletteItem(
+                id: "preset." + preset.id,
+                title: preset.name,
+                detail: [L.t(.paletteGroupPreset),
+                         String(format: L.t(.presetSwitchCount), preset.switchCount)]
+                    .joined(separator: " · "),
+                symbol: "bookmark.fill",
+                group: .preset,
+                keywords: ["preset", "snapshot", "profile", "预设", "預設", "プリセット", "프리셋"],
+                perform: { [weak self] in
+                    self?.applyPreset(preset)
+                }))
+        }
+
+        items.append(PaletteItem(
+            id: "preset.save",
+            title: L.t(.presetSave),
+            detail: L.t(.paletteGroupPreset),
+            symbol: "square.and.arrow.down",
+            group: .preset,
+            keywords: ["preset", "save", "snapshot", "预设", "保存", "프리셋"],
+            perform: { [weak self] in
+                self?.saveCurrentAsPreset()
+            }))
 
         return items
     }
@@ -1555,6 +1592,255 @@ final class DeckViewController: NSViewController {
             button.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         }
         return stack
+    }
+
+    // MARK: - Tab: Presets
+
+    private var presetsList: NSStackView?
+    private var presetsCountLabel: NSTextField?
+    private var presetsSaveButton: NSButton?
+
+    /// The one place where the deck lets the user be the author of a scene.
+    ///
+    /// The layout is on purpose: the save button is the only thing at the top,
+    /// because "save what I have now" is the action people arrive with; the
+    /// saved snapshots are a list you scroll.
+    private func buildPresetsView() -> NSView {
+        let title = NSTextField(labelWithString: L.t(.presetsTitle))
+        title.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        title.textColor = .labelColor
+
+        let count = NSTextField(labelWithString: "")
+        count.font = NSFont.systemFont(ofSize: 11)
+        count.textColor = .secondaryLabelColor
+        count.alignment = .right
+        presetsCountLabel = count
+
+        let save = makeActionButton(title: L.t(.presetSave), symbol: "square.and.arrow.down") {
+            [weak self] in self?.saveCurrentAsPreset()
+        }
+        save.controlSize = .small
+        save.font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        presetsSaveButton = save
+
+        let headerSpacer = NSView()
+        headerSpacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+
+        let header = NSStackView(views: [title, headerSpacer, count, save])
+        header.orientation = .horizontal
+        header.alignment = .centerY
+        header.spacing = 6
+        header.translatesAutoresizingMaskIntoConstraints = false
+
+        let list = NSStackView()
+        list.orientation = .vertical
+        list.spacing = 6
+        list.alignment = .leading
+        list.translatesAutoresizingMaskIntoConstraints = false
+        presetsList = list
+
+        let scroll = makeScrollableList(list)
+
+        let hint = NSTextField(labelWithString: L.t(.presetHint))
+        hint.font = NSFont.systemFont(ofSize: 10)
+        hint.textColor = .tertiaryLabelColor
+        hint.maximumNumberOfLines = 3
+        hint.translatesAutoresizingMaskIntoConstraints = false
+
+        let stack = NSStackView(views: [header, scroll, hint])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        for child in [header, scroll, hint] as [NSView] {
+            child.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        }
+        scroll.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .vertical)
+        scroll.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .vertical)
+
+        rebuildPresets()
+        return stack
+    }
+
+    @objc private func presetsChanged() {
+        guard currentTab == .presets else { return }
+        rebuildPresets()
+    }
+
+    private func rebuildPresets() {
+        guard let list = presetsList else { return }
+        let presets = PresetStore.shared.presets
+
+        for view in list.arrangedSubviews {
+            list.removeArrangedSubview(view)
+            view.removeFromSuperview()
+        }
+
+        if presets.isEmpty {
+            let empty = NSTextField(labelWithString: L.t(.presetEmpty))
+            empty.font = NSFont.systemFont(ofSize: 12)
+            empty.textColor = .tertiaryLabelColor
+            empty.alignment = .center
+            empty.maximumNumberOfLines = 3
+            empty.lineBreakMode = .byWordWrapping
+
+            let padding = NSStackView(views: [empty])
+            padding.orientation = .vertical
+            padding.alignment = .centerX
+            padding.edgeInsets = NSEdgeInsets(top: 32, left: 16, bottom: 12, right: 16)
+            padding.translatesAutoresizingMaskIntoConstraints = false
+            list.addArrangedSubview(padding)
+            padding.widthAnchor.constraint(equalTo: list.widthAnchor).isActive = true
+        } else {
+            for preset in presets {
+                let capsule = wrapInCapsule(makePresetRow(preset))
+                list.addArrangedSubview(capsule)
+                capsule.widthAnchor.constraint(equalTo: list.widthAnchor).isActive = true
+            }
+        }
+
+        presetsCountLabel?.stringValue = presets.isEmpty
+            ? ""
+            : "\(presets.count) / \(PresetStore.limit)"
+        // Full list: the button would only ever fail, so say so before it is
+        // pressed rather than after.
+        presetsSaveButton?.isEnabled = !PresetStore.shared.isFull
+        presetsSaveButton?.toolTip = PresetStore.shared.isFull ? L.t(.presetLimitReached) : nil
+    }
+
+    /// One saved snapshot: name and age on the left, apply and delete on the
+    /// right.
+    ///
+    /// The name is a plain label rather than a borderless button: a button's
+    /// intrinsic height is larger than its text, which made the subtitle ride
+    /// up into the descenders. Two labels in a tight column read better, and
+    /// the apply button next to them is the obvious target anyway.
+    private func makePresetRow(_ preset: Preset) -> NSView {
+        let name = NSTextField(labelWithString: preset.name)
+        name.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
+        name.textColor = .labelColor
+        name.lineBreakMode = .byTruncatingTail
+        name.maximumNumberOfLines = 1
+        name.toolTip = preset.name
+        name.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let detail = NSTextField(labelWithString: String(
+            format: L.t(.presetRowDetail),
+            preset.switchCount,
+            Self.presetDateFormatter.string(from: preset.createdAt)))
+        detail.font = NSFont.systemFont(ofSize: 10)
+        detail.textColor = .secondaryLabelColor
+        detail.lineBreakMode = .byTruncatingTail
+        detail.maximumNumberOfLines = 1
+        detail.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let column = NSStackView(views: [name, detail])
+        column.orientation = .vertical
+        column.alignment = .leading
+        column.spacing = 2
+        column.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+
+        let apply = iconButton(symbol: "arrow.down.circle.fill",
+                               tint: .controlAccentColor,
+                               tooltip: L.t(.presetApply)) { [weak self] in
+            self?.applyPreset(preset)
+        }
+        apply.controlSize = .small
+
+        let remove = iconButton(symbol: "trash",
+                                tint: .systemRed,
+                                tooltip: L.t(.presetDelete)) { [weak self] in
+            self?.deletePreset(preset)
+        }
+        remove.controlSize = .small
+
+        let row = NSStackView(views: [column, spacer, apply, remove])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 8
+        row.edgeInsets = NSEdgeInsets(top: 7, left: 10, bottom: 7, right: 8)
+        return row
+    }
+
+    private static let presetDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM-dd HH:mm"
+        return formatter
+    }()
+
+    // MARK: - Preset actions
+
+    private func applyPreset(_ preset: Preset) {
+        PresetStore.apply(preset) { [weak self] changed in
+            guard let self = self else { return }
+            let detail = changed == 0 ? preset.name : "\(preset.name) · \(changed)"
+            self.showStatus("\(L.t(.presetApplied)) — \(detail)", isError: false)
+            self.refreshToggles()
+            self.rebuildPresets()
+        }
+    }
+
+    private func deletePreset(_ preset: Preset) {
+        PresetStore.shared.remove(id: preset.id)
+        showStatus("\(L.t(.presetDeleted)) — \(preset.name)", isError: false)
+        rebuildPresets()
+    }
+
+    /// Snapshot first, ask for the name second.
+    ///
+    /// The capture shells out once per switch, so it starts before the sheet
+    /// opens: by the time someone has typed eight characters the states are
+    /// already in hand and saving is instant.
+    private func saveCurrentAsPreset() {
+        guard !PresetStore.shared.isFull else {
+            showStatus(L.t(.presetLimitReached), isError: true)
+            return
+        }
+
+        PresetStore.capture { [weak self] states in
+            guard let self = self else { return }
+            let suggested = PresetStore.suggestedName(existing: PresetStore.shared.presets)
+            self.askForPresetName(default: suggested) { name in
+                guard let preset = PresetStore.shared.save(name: name, states: states) else {
+                    self.showStatus(L.t(.presetLimitReached), isError: true)
+                    return
+                }
+                self.rebuildPresets()
+                self.showStatus("\(L.t(.presetSaved)) — \(preset.name)", isError: false)
+            }
+        }
+    }
+
+    private func askForPresetName(default suggested: String,
+                                  completion: @escaping (String) -> Void) {
+        // No window means no sheet: the layout harness and any headless surface
+        // fall back to the suggested name instead of hanging on a dialog.
+        guard let window = view.window else {
+            completion(suggested)
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = L.t(.presetSave)
+        alert.informativeText = L.t(.presetSavePrompt)
+        alert.addButton(withTitle: L.t(.presetSave))
+        alert.addButton(withTitle: L.t(.cancel))
+
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 220, height: 24))
+        field.stringValue = suggested
+        field.placeholderString = L.t(.presetNamePlaceholder)
+        field.font = NSFont.systemFont(ofSize: 12)
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+
+        alert.beginSheetModal(for: window) { response in
+            guard response == .alertFirstButtonReturn else { return }
+            completion(field.stringValue)
+        }
     }
 
     // MARK: - Helpers

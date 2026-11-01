@@ -99,7 +99,8 @@ enum L {
         case appName
         case appTagline
 
-        case tabSwitches, tabMonitor, tabWindows, tabCleaner, tabTools, tabClipboard, tabLaunch
+        case tabSwitches, tabMonitor, tabWindows, tabCleaner, tabTools, tabClipboard, tabLaunch,
+             tabPresets
 
         // Toggles
         case darkMode, hiddenFiles, pathBar, desktopIcons, keepAwake, mute,
@@ -154,6 +155,13 @@ enum L {
         case paletteTitle, palettePlaceholder, paletteHint, paletteEmpty,
              paletteGroupSwitch, paletteGroupAction, paletteGroupJump,
              stateOn, stateOff
+
+        // Presets
+        case presetsTitle, presetSave, presetSavePrompt, presetNamePlaceholder,
+             presetSaved, presetApplied, presetDeleted, presetLimitReached,
+             presetEmpty, presetHint, presetApply, presetDelete, presetRename,
+             presetDefaultName, presetRowDetail, presetSwitchCount,
+             paletteGroupPreset, cancel
     }
 }
 
@@ -286,6 +294,27 @@ private let en: [L.Key: String] = [
     .paletteGroupJump: "Tab",
     .stateOn: "On",
     .stateOff: "Off",
+
+    // Presets
+    .presetsTitle: "Presets",
+    .tabPresets: "Presets",
+    .presetSave: "Save current",
+    .presetSavePrompt: "Name this snapshot of every switch.",
+    .presetNamePlaceholder: "Preset name",
+    .presetSaved: "Preset saved",
+    .presetApplied: "Preset applied",
+    .presetDeleted: "Preset deleted",
+    .presetLimitReached: "Preset limit reached — delete one first",
+    .presetEmpty: "No presets yet. Set the switches how you like them, then save.",
+    .presetHint: "A preset is a snapshot of every switch at once. Come back to it with one click, or from ⌘K.",
+    .presetApply: "Apply",
+    .presetDelete: "Delete",
+    .presetRename: "Rename",
+    .presetDefaultName: "Preset %d",
+    .presetRowDetail: "%d switches · %@",
+    .presetSwitchCount: "%d switches",
+    .paletteGroupPreset: "Preset",
+    .cancel: "Cancel",
 
     .tabClipboard: "Clipboard",
     .clipboardCapture: "Record clipboard",
@@ -432,6 +461,27 @@ private let zhHans: [L.Key: String] = [
     .stateOn: "已开启",
     .stateOff: "已关闭",
 
+    // Presets
+    .presetsTitle: "预设",
+    .tabPresets: "预设",
+    .presetSave: "存为预设",
+    .presetSavePrompt: "给这份全部开关的快照起个名字。",
+    .presetNamePlaceholder: "预设名称",
+    .presetSaved: "预设已保存",
+    .presetApplied: "预设已应用",
+    .presetDeleted: "预设已删除",
+    .presetLimitReached: "预设数量已达上限，先删一个",
+    .presetEmpty: "还没有预设。把开关调成你想要的样子，然后存下来。",
+    .presetHint: "预设会一次性记下全部开关的状态，之后一键（或在 ⌘K 里）还原。",
+    .presetApply: "应用",
+    .presetDelete: "删除",
+    .presetRename: "重命名",
+    .presetDefaultName: "预设 %d",
+    .presetRowDetail: "%d 个开关 · %@",
+    .presetSwitchCount: "%d 个开关",
+    .paletteGroupPreset: "预设",
+    .cancel: "取消",
+
     .tabClipboard: "剪贴板",
     .clipboardCapture: "记录剪贴板",
     .clipboardEmpty: "还没有记录，复制点什么就会出现在这里。",
@@ -576,6 +626,27 @@ private let zhHant: [L.Key: String] = [
     .paletteGroupJump: "標籤頁",
     .stateOn: "已開啟",
     .stateOff: "已關閉",
+
+    // Presets
+    .presetsTitle: "預設",
+    .tabPresets: "預設",
+    .presetSave: "存為預設",
+    .presetSavePrompt: "為這份全部開關的快照命名。",
+    .presetNamePlaceholder: "預設名稱",
+    .presetSaved: "預設已儲存",
+    .presetApplied: "預設已套用",
+    .presetDeleted: "預設已刪除",
+    .presetLimitReached: "預設數量已達上限，請先刪除一個",
+    .presetEmpty: "還沒有預設。把開關調成想要的樣子，再存下來。",
+    .presetHint: "預設會一次記下全部開關的狀態，之後一鍵（或在 ⌘K 裡）還原。",
+    .presetApply: "套用",
+    .presetDelete: "刪除",
+    .presetRename: "重新命名",
+    .presetDefaultName: "預設 %d",
+    .presetRowDetail: "%d 個開關 · %@",
+    .presetSwitchCount: "%d 個開關",
+    .paletteGroupPreset: "預設",
+    .cancel: "取消",
 
     .tabClipboard: "剪貼板",
     .clipboardCapture: "記錄剪貼板",
@@ -722,6 +793,27 @@ private let ja: [L.Key: String] = [
     .stateOn: "オン",
     .stateOff: "オフ",
 
+    // Presets
+    .presetsTitle: "プリセット",
+    .tabPresets: "プリセット",
+    .presetSave: "現在の状態を保存",
+    .presetSavePrompt: "すべてのスイッチの状態に名前を付けます。",
+    .presetNamePlaceholder: "プリセット名",
+    .presetSaved: "プリセットを保存しました",
+    .presetApplied: "プリセットを適用しました",
+    .presetDeleted: "プリセットを削除しました",
+    .presetLimitReached: "プリセットの上限に達しました。先に1つ削除してください",
+    .presetEmpty: "プリセットはまだありません。スイッチを好みの状態にしてから保存してください。",
+    .presetHint: "プリセットは全スイッチの状態をまとめて記録し、あとからワンクリック（または ⌘K）で復元できます。",
+    .presetApply: "適用",
+    .presetDelete: "削除",
+    .presetRename: "名前を変更",
+    .presetDefaultName: "プリセット %d",
+    .presetRowDetail: "%d 個のスイッチ · %@",
+    .presetSwitchCount: "%d 個のスイッチ",
+    .paletteGroupPreset: "プリセット",
+    .cancel: "キャンセル",
+
     .tabClipboard: "クリップボード",
     .clipboardCapture: "クリップボードを記録",
     .clipboardEmpty: "まだ記録はありません。コピーするとここに残ります。",
@@ -866,6 +958,27 @@ private let ko: [L.Key: String] = [
     .paletteGroupJump: "탭",
     .stateOn: "켜짐",
     .stateOff: "꺼짐",
+
+    // Presets
+    .presetsTitle: "프리셋",
+    .tabPresets: "프리셋",
+    .presetSave: "현재 상태 저장",
+    .presetSavePrompt: "모든 스위치 상태의 스냅숏에 이름을 붙이세요.",
+    .presetNamePlaceholder: "프리셋 이름",
+    .presetSaved: "프리셋을 저장했습니다",
+    .presetApplied: "프리셋을 적용했습니다",
+    .presetDeleted: "프리셋을 삭제했습니다",
+    .presetLimitReached: "프리셋 한도에 도달했습니다. 먼저 하나를 삭제하세요",
+    .presetEmpty: "아직 프리셋이 없습니다. 스위치를 원하는 상태로 만든 뒤 저장하세요.",
+    .presetHint: "프리셋은 모든 스위치 상태를 한 번에 기록하고, 나중에 클릭 한 번(또는 ⌘K)으로 복원합니다.",
+    .presetApply: "적용",
+    .presetDelete: "삭제",
+    .presetRename: "이름 변경",
+    .presetDefaultName: "프리셋 %d",
+    .presetRowDetail: "스위치 %d개 · %@",
+    .presetSwitchCount: "스위치 %d개",
+    .paletteGroupPreset: "프리셋",
+    .cancel: "취소",
 
     .tabClipboard: "클립보드",
     .clipboardCapture: "클립보드 기록",

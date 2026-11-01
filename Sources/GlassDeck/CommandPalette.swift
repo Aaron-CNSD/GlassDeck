@@ -10,13 +10,14 @@ import AppKit
 struct PaletteItem {
 
     enum Group {
-        case toggle, action, jump
+        case toggle, action, jump, preset
 
         var tint: NSColor {
             switch self {
             case .toggle: return .controlAccentColor
             case .action: return .systemOrange
             case .jump: return .systemTeal
+            case .preset: return .systemPink
             }
         }
     }

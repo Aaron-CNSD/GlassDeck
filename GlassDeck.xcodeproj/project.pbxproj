@@ -19,6 +19,7 @@
 		5648E3A72E64553411D797DC /* ProcessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1299AD023E2FF9898A4C6C /* ProcessMonitor.swift */; };
 		56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */; };
 		62DE7C3C869A8DA0DCAB3AD5 /* GlassDeckWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAF842EA40C88F0B4F4811D2 /* GlassDeckWidgetView.swift */; };
+		64FF4AE6317505B47E348610 /* Presets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 955D68CFAFC570E30D6AF56D /* Presets.swift */; };
 		6D49127A43E7458F7CAB3C33 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A86B0487E31C40506B5B4D /* main.swift */; };
 		6D88A10E8ECE2494A67B5CF0 /* ToggleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356EF9376BC5C1488D301127 /* ToggleRowView.swift */; };
 		6E89F9310D48DE183BC46EB1 /* WorkspaceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658D50078ACA14C02468EEF4 /* WorkspaceViewController.swift */; };
@@ -109,6 +110,7 @@
 		7E6EA7F5686EC718B878BF95 /* Shared.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Shared.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		84DC599D485DE6B1EF68F592 /* ClipboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardStore.swift; sourceTree = "<group>"; };
 		863037DB92A329D08C322982 /* QuickLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLaunch.swift; sourceTree = "<group>"; };
+		955D68CFAFC570E30D6AF56D /* Presets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Presets.swift; sourceTree = "<group>"; };
 		96B3898D0DAA160262E329E6 /* DisplayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayController.swift; sourceTree = "<group>"; };
 		98031268E60D243CD3CDC35D /* SystemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemController.swift; sourceTree = "<group>"; };
 		9F9BE0DE7459648809A298FD /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 				43A86B0487E31C40506B5B4D /* main.swift */,
 				DA60ACDEA8FA9BCF687ED92F /* MiniDeckViewController.swift */,
 				BF0F8889AF56347E875B47D3 /* PermissionCenter.swift */,
+				955D68CFAFC570E30D6AF56D /* Presets.swift */,
 				3A1299AD023E2FF9898A4C6C /* ProcessMonitor.swift */,
 				863037DB92A329D08C322982 /* QuickLaunch.swift */,
 				EEBD078FC605731DF0BF49E9 /* Scenes.swift */,
@@ -386,6 +389,7 @@
 				B3351587EB468E5632B4C257 /* Localization.swift in Sources */,
 				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,
 				56F8D2A3C552CE7033BAC614 /* PermissionCenter.swift in Sources */,
+				64FF4AE6317505B47E348610 /* Presets.swift in Sources */,
 				5648E3A72E64553411D797DC /* ProcessMonitor.swift in Sources */,
 				E7319B4CD693F12B98940D40 /* QuickLaunch.swift in Sources */,
 				78D0797BC08D64646B17E958 /* Scenes.swift in Sources */,

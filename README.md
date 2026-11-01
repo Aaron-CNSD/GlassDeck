@@ -18,6 +18,12 @@
 
 ---
 
+## New in 1.8.0
+
+**Presets** — the one thing the deck was still missing: a way to be the author of a scene. Set the eleven switches however you like them — dark, muted, menu bar hidden, path bar on — then hit *Save current* and the whole board is stored under a name you chose. Come back to it from the new **Presets** tab (⌘8) with one click, or type its name into ⌘K from anywhere.
+
+A preset is a snapshot, not a rule: applying it only touches the switches that actually differ, so restoring a setup costs nothing and launches nothing. Saving over an existing name updates it in place instead of piling up near-identical copies; the cap is twelve, because a list you scroll is a list you stop reading. Everything is stored in `UserDefaults` on this Mac, and a preset that names a switch the app no longer has simply ignores it. Eighteen new strings, translated into all five languages.
+
 ## New in 1.7.0
 
 Press **⌘K** and the whole deck collapses into one search field. Every switch, every tool action and every tab is one query away: type `dark` to flip the theme, `trash` to empty the bin, `截图` to grab the screen, then ↑↓ to pick and ↩ to run — no mouse, no tab-hopping. English words find Chinese controls because every switch carries its own aliases alongside its translated title, and the right-hand note counts as search text, so `动作` lists every action.
@@ -54,7 +60,7 @@ brew trust Aaron-CNSD/tap          # Homebrew 5+ asks before running third-party
 brew install --cask glassdeck
 ```
 
-Or grab the DMG directly: **[Glass.Deck.v1.7.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.7.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
+Or grab the DMG directly: **[Glass.Deck.v1.8.0.dmg](https://github.com/Aaron-CNSD/GlassDeck/releases/latest/download/Glass.Deck.v1.8.0.dmg)** → drag to Applications → click the glass prism in the menu bar.
 
 <details>
 <summary><b>macOS says “Glass Deck is damaged” or “cannot be opened”?</b> — click here</summary>
@@ -115,6 +121,9 @@ Screenshot, screen recording, and **clipboard OCR** (Vision framework — copy a
 
 **Launch**
 Pin the URLs, files and commands you open ten times a day.
+
+**Presets**
+Save the current position of all eleven switches under a name, and put the whole board back with one click — or from ⌘K.
 
 </td></tr>
 </table>
