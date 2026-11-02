@@ -27,6 +27,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = applicationMenu
         setupMenuBarItem()
         setupPopover()
+        // A focus session is the one thing in the app that has to stay visible
+        // while everything else is closed, so the menu bar follows it.
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(focusStateChanged),
+                                              name: FocusTimer.changed,
+                                              object: nil)
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(focusStateChanged),
+                                              name: FocusTimer.finished,
+                                              object: nil)
+        updateMenuBarCountdown()
         // Clipboard history runs for the whole session, not just while the
         // panel is open, so a copy made anywhere lands in the shelf.
         ClipboardStore.shared.start()
@@ -204,6 +215,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         scenesItem.submenu = scenesMenu
         menu.addItem(scenesItem)
 
+        // Focus lengths, for the days you just want to start the clock.
+        let focusItem = NSMenuItem(title: L.t(.focusTitle), action: nil, keyEquivalent: "")
+        let focusMenu = NSMenu()
+        for minutes in FocusTimer.durations {
+            let item = NSMenuItem(title: String(format: L.t(.focusStartMinutes), minutes),
+                                  action: #selector(startFocus(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = minutes
+            focusMenu.addItem(item)
+        }
+        focusMenu.addItem(.separator())
+        let stopItem = NSMenuItem(title: L.t(.focusStop),
+                                  action: #selector(stopFocus),
+                                  keyEquivalent: "")
+        stopItem.target = self
+        stopItem.isEnabled = FocusTimer.shared.isActive
+        focusMenu.addItem(stopItem)
+        focusItem.submenu = focusMenu
+        menu.addItem(focusItem)
+
         // Language submenu
         let languageItem = NSMenuItem(title: L.t(.language), action: nil, keyEquivalent: "")
         let languageMenu = NSMenu()
@@ -290,6 +322,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             task.launch()
             NSApp.terminate(nil)
         }
+    }
+
+    // MARK: - Focus countdown
+
+    @objc private func focusStateChanged() {
+        updateMenuBarCountdown()
+    }
+
+    /// Mirrors the running session into the status item.
+    ///
+    /// The title is cleared the moment a session stops, because a stale
+    /// countdown in the menu bar is worse than no countdown at all — people
+    /// trust it and then miss the thing they were timing.
+    private func updateMenuBarCountdown() {
+        guard let button = statusItem.button else { return }
+        let timer = FocusTimer.shared
+
+        switch timer.phase {
+        case .running:
+            button.title = " " + timer.remainingText
+        case .paused:
+            // The pause glyph earns its width: a frozen countdown looks like a
+            // bug until something on screen says otherwise.
+            button.title = " \u{23F8} " + timer.remainingText
+        case .idle, .finished:
+            button.title = ""
+        }
+
+        button.toolTip = timer.isActive
+            ? "\(L.t(.appName)) — \(timer.remainingText)"
+            : L.t(.appName)
+    }
+
+    /// Right-click menu entry: start a session without opening the panel.
+    @objc private func startFocus(_ sender: NSMenuItem) {
+        guard let minutes = sender.representedObject as? Int else { return }
+        let timer = FocusTimer.shared
+        if timer.isActive { timer.reset() }
+        timer.setDuration(minutes: minutes)
+        timer.start()
+    }
+
+    @objc private func stopFocus() {
+        FocusTimer.shared.reset()
     }
 
     // MARK: - Standalone Control Window

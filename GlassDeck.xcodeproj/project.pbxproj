@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		093994E1E8E6D45F89EC23BC /* SparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDD82E927A17729DBE85246 /* SparklineView.swift */; };
+		14D05DB576A3E2E38D2A41A3 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACCEE8B6E442DA904A1F7E3 /* FocusTimer.swift */; };
 		15335ECDB5D2B86B505CCB08 /* DeckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */; };
 		1EBEE50B5E8ABB6D888DA16E /* DiskCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FD4830DD0E557965E8C7380 /* DiskCleaner.swift */; };
 		20B552E7F47DA2967328DEB7 /* Shared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E6EA7F5686EC718B878BF95 /* Shared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -124,6 +125,7 @@
 		E0176EAAA405533628BBF769 /* ToggleLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleLibrary.swift; sourceTree = "<group>"; };
 		E4E3212F4C5D10AD284A785B /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
 		EEBD078FC605731DF0BF49E9 /* Scenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenes.swift; sourceTree = "<group>"; };
+		FACCEE8B6E442DA904A1F7E3 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
 		FADA5B92947E7CE9AC7F7536 /* DeckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -168,6 +170,7 @@
 				6F4C9A51E154BEDEB4DB4367 /* Diagnostics.swift */,
 				0FD4830DD0E557965E8C7380 /* DiskCleaner.swift */,
 				96B3898D0DAA160262E329E6 /* DisplayController.swift */,
+				FACCEE8B6E442DA904A1F7E3 /* FocusTimer.swift */,
 				E4E3212F4C5D10AD284A785B /* GlassPanel.swift */,
 				5F04D6AED68DD93507A9982B /* Info.plist */,
 				BF7013321C2A1C75539503BD /* Localization.swift */,
@@ -385,6 +388,7 @@
 				7E2C5C8C1DC10DF99ED28C0B /* Diagnostics.swift in Sources */,
 				1EBEE50B5E8ABB6D888DA16E /* DiskCleaner.swift in Sources */,
 				CFCB1A571E7AF046FB252397 /* DisplayController.swift in Sources */,
+				14D05DB576A3E2E38D2A41A3 /* FocusTimer.swift in Sources */,
 				732B617DBA5E1AD1E836E557 /* GlassPanel.swift in Sources */,
 				B3351587EB468E5632B4C257 /* Localization.swift in Sources */,
 				FFEF5A031972433957A7FF9B /* MiniDeckViewController.swift in Sources */,

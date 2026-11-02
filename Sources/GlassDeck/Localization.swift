@@ -162,6 +162,12 @@ enum L {
              presetEmpty, presetHint, presetApply, presetDelete, presetRename,
              presetDefaultName, presetRowDetail, presetSwitchCount,
              paletteGroupPreset, cancel
+
+        // Focus timer
+        case tabFocus, focusTitle, focusStart, focusPause, focusResume, focusReset,
+             focusHint, focusStateIdle, focusStateRunning, focusStatePaused,
+             focusStateDone, focusFinished, focusStartMinutes, focusStop,
+             focusGroup, focusMinutesUnit
     }
 }
 
@@ -329,6 +335,24 @@ private let en: [L.Key: String] = [
     .clipboardUnpin: "Unpin",
     .clipboardRemove: "Remove",
     .clipboardCount: "%d items",
+
+    // Focus timer
+    .tabFocus: "Focus",
+    .focusTitle: "Focus Timer",
+    .focusStart: "Start",
+    .focusPause: "Pause",
+    .focusResume: "Resume",
+    .focusReset: "Reset",
+    .focusHint: "The countdown keeps running with this panel closed — the menu bar carries it, and a chime marks the end.",
+    .focusStateIdle: "Ready",
+    .focusStateRunning: "Focusing",
+    .focusStatePaused: "Paused",
+    .focusStateDone: "Session complete",
+    .focusFinished: "Focus session complete",
+    .focusStartMinutes: "Focus for %d minutes",
+    .focusStop: "Stop focus session",
+    .focusGroup: "Focus",
+    .focusMinutesUnit: "%d min",
 ]
 
 // MARK: - 简体中文
@@ -495,6 +519,24 @@ private let zhHans: [L.Key: String] = [
     .clipboardUnpin: "取消固定",
     .clipboardRemove: "删除",
     .clipboardCount: "%d 条",
+
+    // 专注计时
+    .tabFocus: "专注",
+    .focusTitle: "专注计时",
+    .focusStart: "开始",
+    .focusPause: "暂停",
+    .focusResume: "继续",
+    .focusReset: "重置",
+    .focusHint: "面板关掉也照样走：菜单栏会一路倒数，时间到会响一声。",
+    .focusStateIdle: "准备开始",
+    .focusStateRunning: "专注中",
+    .focusStatePaused: "已暂停",
+    .focusStateDone: "已完成",
+    .focusFinished: "专注结束",
+    .focusStartMinutes: "专注 %d 分钟",
+    .focusStop: "结束专注",
+    .focusGroup: "专注",
+    .focusMinutesUnit: "%d 分钟",
 ]
 
 // MARK: - 繁體中文
@@ -661,6 +703,24 @@ private let zhHant: [L.Key: String] = [
     .clipboardUnpin: "取消固定",
     .clipboardRemove: "刪除",
     .clipboardCount: "%d 條",
+
+    // 專注計時
+    .tabFocus: "專注",
+    .focusTitle: "專注計時",
+    .focusStart: "開始",
+    .focusPause: "暫停",
+    .focusResume: "繼續",
+    .focusReset: "重設",
+    .focusHint: "面板關掉也照樣走：選單列會一路倒數，時間到會響一聲。",
+    .focusStateIdle: "準備開始",
+    .focusStateRunning: "專注中",
+    .focusStatePaused: "已暫停",
+    .focusStateDone: "已完成",
+    .focusFinished: "專注結束",
+    .focusStartMinutes: "專注 %d 分鐘",
+    .focusStop: "結束專注",
+    .focusGroup: "專注",
+    .focusMinutesUnit: "%d 分鐘",
 ]
 
 // MARK: - 日本語
@@ -827,6 +887,24 @@ private let ja: [L.Key: String] = [
     .clipboardUnpin: "固定を解除",
     .clipboardRemove: "削除",
     .clipboardCount: "%d 件",
+
+    // 集中タイマー
+    .tabFocus: "集中",
+    .focusTitle: "集中タイマー",
+    .focusStart: "開始",
+    .focusPause: "一時停止",
+    .focusResume: "再開",
+    .focusReset: "リセット",
+    .focusHint: "このパネルを閉じてもカウントは続き、残り時間はメニューバーに出ます。終了時はチャイムが鳴ります。",
+    .focusStateIdle: "準備完了",
+    .focusStateRunning: "集中中",
+    .focusStatePaused: "一時停止中",
+    .focusStateDone: "完了",
+    .focusFinished: "集中セッション終了",
+    .focusStartMinutes: "%d 分間の集中",
+    .focusStop: "集中を終了",
+    .focusGroup: "集中",
+    .focusMinutesUnit: "%d 分",
 ]
 
 // MARK: - 한국어
@@ -993,4 +1071,22 @@ private let ko: [L.Key: String] = [
     .clipboardUnpin: "고정 해제",
     .clipboardRemove: "삭제",
     .clipboardCount: "%d개",
+
+    // 집중 타이머
+    .tabFocus: "집중",
+    .focusTitle: "집중 타이머",
+    .focusStart: "시작",
+    .focusPause: "일시정지",
+    .focusResume: "계속",
+    .focusReset: "초기화",
+    .focusHint: "패널을 닫아도 계속 흐르고, 남은 시간은 메뉴 막대에 표시됩니다. 끝나면 알림음이 울립니다.",
+    .focusStateIdle: "준비됨",
+    .focusStateRunning: "집중 중",
+    .focusStatePaused: "일시정지됨",
+    .focusStateDone: "완료",
+    .focusFinished: "집중 세션 종료",
+    .focusStartMinutes: "%d분 집중",
+    .focusStop: "집중 종료",
+    .focusGroup: "집중",
+    .focusMinutesUnit: "%d분",
 ]

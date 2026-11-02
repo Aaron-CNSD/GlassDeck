@@ -6,7 +6,7 @@ import ObjectiveC
 final class DeckViewController: NSViewController {
 
     private enum Tab: Int, CaseIterable {
-        case toggles, monitor, windows, cleaner, tools, clipboard, launch, presets
+        case toggles, monitor, windows, cleaner, tools, clipboard, launch, presets, focus
         var title: String {
             switch self {
             case .toggles: return L.t(.tabSwitches)
@@ -17,6 +17,7 @@ final class DeckViewController: NSViewController {
             case .clipboard: return L.t(.tabClipboard)
             case .launch: return L.t(.tabLaunch)
             case .presets: return L.t(.tabPresets)
+            case .focus: return L.t(.tabFocus)
             }
         }
         var symbol: String {
@@ -29,6 +30,7 @@ final class DeckViewController: NSViewController {
             case .clipboard: return "doc.on.clipboard"
             case .launch: return "bolt"
             case .presets: return "bookmark.fill"
+            case .focus: return "timer"
             }
         }
     }
@@ -145,6 +147,7 @@ final class DeckViewController: NSViewController {
         contentViews[.clipboard] = buildClipboardView()
         contentViews[.launch] = buildLaunchView()
         contentViews[.presets] = buildPresetsView()
+        contentViews[.focus] = buildFocusView()
 
         // Assemble
         let root = NSStackView(views: [headerRow, segmented, contentContainer, statusBanner])
@@ -185,6 +188,17 @@ final class DeckViewController: NSViewController {
         NotificationCenter.default.addObserver(self,
                                               selector: #selector(presetsChanged),
                                               name: PresetStore.changed,
+                                              object: nil)
+        // The focus session outlives this view: the popover can be closed while
+        // the countdown runs, so the ring has to be redrawn from the timer, not
+        // from whatever it last drew.
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(focusChanged),
+                                              name: FocusTimer.changed,
+                                              object: nil)
+        NotificationCenter.default.addObserver(self,
+                                              selector: #selector(focusFinished),
+                                              name: FocusTimer.finished,
                                               object: nil)
     }
 
@@ -250,6 +264,7 @@ final class DeckViewController: NSViewController {
         if tab == .clipboard { rebuildClipboard() }
         if tab == .monitor { refreshProcesses() }
         if tab == .presets { rebuildPresets() }
+        if tab == .focus { refreshFocusUI() }
     }
 
     // MARK: - Command palette
@@ -362,6 +377,28 @@ final class DeckViewController: NSViewController {
             keywords: ["preset", "save", "snapshot", "预设", "保存", "프리셋"],
             perform: { [weak self] in
                 self?.saveCurrentAsPreset()
+            }))
+
+        // Focus is reachable from the keyboard too: "25" should be enough to
+        // start a session without ever opening the tab.
+        let focus = FocusTimer.shared
+        items.append(PaletteItem(
+            id: "focus.toggle",
+            title: focus.isActive
+                ? L.t(.focusStop)
+                : String(format: L.t(.focusStartMinutes), focus.minutes),
+            detail: L.t(.focusGroup),
+            symbol: "timer",
+            group: .action,
+            keywords: ["focus", "timer", "pomodoro", "concentrate", "专注", "番茄", "集中", "집중"],
+            perform: { [weak self] in
+                let timer = FocusTimer.shared
+                if timer.isActive {
+                    timer.reset()
+                } else {
+                    timer.start()
+                }
+                self?.refreshFocusUI()
             }))
 
         return items
@@ -1841,6 +1878,166 @@ final class DeckViewController: NSViewController {
             guard response == .alertFirstButtonReturn else { return }
             completion(field.stringValue)
         }
+    }
+
+    // MARK: - Tab: Focus
+
+    private var focusRing: FocusRingView?
+    private var focusPrimaryButton: NSButton?
+    private var focusDurationControl: NSSegmentedControl?
+    private var focusResetButton: NSButton?
+
+    /// The one tab whose content changes while you are not touching it.
+    ///
+    /// Deliberately sparse: a ring, four lengths, one button. A timer with a
+    /// settings dialog is a timer nobody starts.
+    private func buildFocusView() -> NSView {
+        let ring = FocusRingView()
+        ring.heightAnchor.constraint(equalToConstant: 172).isActive = true
+        ring.widthAnchor.constraint(equalToConstant: 172).isActive = true
+        focusRing = ring
+
+        let durations = NSSegmentedControl(
+            labels: FocusTimer.durations.map { "\($0)" },
+            trackingMode: .selectOne,
+            target: self,
+            action: #selector(focusDurationChanged(_:)))
+        durations.segmentStyle = .rounded
+        durations.controlSize = .regular
+        durations.translatesAutoresizingMaskIntoConstraints = false
+        durations.setAccessibilityLabel(L.t(.focusTitle))
+        for (index, minutes) in FocusTimer.durations.enumerated() {
+            durations.setToolTip(String(format: L.t(.focusMinutesUnit), minutes),
+                                 forSegment: index)
+        }
+        durations.widthAnchor.constraint(equalToConstant: 196).isActive = true
+        focusDurationControl = durations
+
+        let primary = NSButton(title: L.t(.focusStart), target: nil, action: nil)
+        primary.bezelStyle = .texturedRounded
+        primary.controlSize = .large
+        primary.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        primary.widthAnchor.constraint(greaterThanOrEqualToConstant: 116).isActive = true
+        let primaryHandler = ActionHandler { [weak self] in
+            FocusTimer.shared.toggle()
+            self?.refreshFocusUI()
+        }
+        primary.target = primaryHandler
+        primary.action = #selector(ActionHandler.run)
+        objc_setAssociatedObject(primary, "handler", primaryHandler, .OBJC_ASSOCIATION_RETAIN)
+        focusPrimaryButton = primary
+
+        let reset = iconButton(symbol: "arrow.counterclockwise",
+                               tint: .secondaryLabelColor,
+                               tooltip: L.t(.focusReset)) {
+            FocusTimer.shared.reset()
+        }
+        reset.isEnabled = false
+        focusResetButton = reset
+
+        let controls = NSStackView(views: [primary, reset])
+        controls.orientation = .horizontal
+        controls.alignment = .centerY
+        controls.spacing = 10
+        controls.translatesAutoresizingMaskIntoConstraints = false
+
+        let hint = NSTextField(labelWithString: L.t(.focusHint))
+        hint.font = NSFont.systemFont(ofSize: 10)
+        hint.textColor = .tertiaryLabelColor
+        hint.alignment = .center
+        hint.maximumNumberOfLines = 3
+        hint.lineBreakMode = .byWordWrapping
+        hint.translatesAutoresizingMaskIntoConstraints = false
+
+        let stack = NSStackView(views: [ring, durations, controls, hint])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.setCustomSpacing(16, after: ring)
+
+        NSLayoutConstraint.activate([
+            hint.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -20),
+        ])
+
+        // Every other tab is a list that fills the panel. This one is a single
+        // object, so it is centred in the space rather than pinned to the top
+        // with two hundred points of nothing underneath.
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor, constant: -12),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: container.leadingAnchor, constant: 8),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -8),
+        ])
+
+        refreshFocusUI()
+        return container
+    }
+
+    @objc private func focusDurationChanged(_ sender: NSSegmentedControl) {
+        let index = sender.selectedSegment
+        guard FocusTimer.durations.indices.contains(index) else { return }
+        // A running session refuses the change; put the chip back where it was
+        // instead of leaving the UI claiming a length it did not get.
+        if !FocusTimer.shared.setDuration(minutes: FocusTimer.durations[index]) {
+            refreshFocusUI()
+            showStatus(L.t(.focusHint), isError: false)
+            return
+        }
+        refreshFocusUI()
+    }
+
+    @objc private func focusChanged() {
+        guard currentTab == .focus else { return }
+        refreshFocusUI()
+    }
+
+    @objc private func focusFinished() {
+        refreshFocusUI()
+        showStatus(L.t(.focusFinished), isError: false)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    /// Paints the timer's state onto the ring and the button. The single place
+    /// that reads `FocusTimer.shared`, so the tab and the menu bar can never
+    /// disagree about what is running.
+    private func refreshFocusUI() {
+        let timer = FocusTimer.shared
+
+        guard focusRing != nil else { return }
+        focusRing?.progress = timer.progress
+        focusRing?.timeText = timer.remainingText
+        focusRing?.isPaused = timer.phase == .paused
+
+        switch timer.phase {
+        case .idle:
+            focusRing?.caption = L.t(.focusStateIdle)
+            focusPrimaryButton?.title = L.t(.focusStart)
+        case .running:
+            focusRing?.caption = L.t(.focusStateRunning)
+            focusPrimaryButton?.title = L.t(.focusPause)
+        case .paused:
+            focusRing?.caption = L.t(.focusStatePaused)
+            focusPrimaryButton?.title = L.t(.focusResume)
+        case .finished:
+            focusRing?.caption = L.t(.focusStateDone)
+            focusPrimaryButton?.title = L.t(.focusStart)
+        }
+
+        focusPrimaryButton?.contentTintColor = timer.phase == .running
+            ? .systemOrange
+            : nil
+
+        // Lengths are frozen while a session is in flight, and reset is only
+        // meaningful once something has moved.
+        focusDurationControl?.isEnabled = !timer.isActive
+        if let index = FocusTimer.durations.firstIndex(of: timer.minutes) {
+            focusDurationControl?.selectedSegment = index
+        }
+        focusResetButton?.isEnabled = timer.phase != .idle || timer.remaining < timer.duration
     }
 
     // MARK: - Helpers
